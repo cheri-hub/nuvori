@@ -6,8 +6,6 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, describe, expect, it } from 'vitest';
 import App from '../App';
 
-declare const process: { cwd(): string };
-
 afterEach(cleanup);
 
 describe('Home accessibility regressions', () => {
@@ -45,10 +43,9 @@ describe('Home accessibility regressions', () => {
   });
 
   it('defines a visible focus ring in the global focus-visible rule', () => {
-    const cssUrl = new URL('../styles/global.css', import.meta.url);
-    const cssPath = cssUrl.protocol === 'file:'
-      ? fileURLToPath(cssUrl)
-      : `${process.cwd()}/src/styles/global.css`;
+    const resolveModule = (import.meta as ImportMeta & { resolve?: (specifier: string) => string }).resolve;
+    const cssUrl = resolveModule?.('../styles/global.css') ?? new URL('../styles/global.css', import.meta.url).href;
+    const cssPath = fileURLToPath(cssUrl);
     const globalCss = readFileSync(cssPath, 'utf8');
 
     expect(globalCss).toMatch(/:focus-visible\s*\{[\s\S]*outline\s*:\s*[^;]+[\s\S]*\}/);
