@@ -1,0 +1,32 @@
+:root {
+  --color-musgo-profundo: #12221E;
+  --color-nevoa: #F1EEE4;
+  --color-tinta: #1D2926;
+  --color-amber-pollen: #E6A24A;
+  --color-coral-brasa: #D66A55;
+  --color-mint-sinal: #8CC6B4;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 9999px;
+
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-sans: 'Instrument Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --focus-ring: 0 0 0 3px var(--color-amber-pollen);
+  --content-width-mobile: 20rem;
+  --motion-duration: 180ms;
+}
