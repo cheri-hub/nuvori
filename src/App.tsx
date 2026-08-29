@@ -1,4 +1,4 @@
-import { useReducer } from 'react';
+import { useReducer, useRef } from 'react';
 import { HomeShell } from './components/HomeShell';
 import { MuruScene } from './components/MuruScene';
 import { ActiveSession } from './components/ActiveSession';
@@ -12,21 +12,24 @@ import { homeReducer, initialHomeState } from './state/homeReducer';
 
 export default function App() {
   const [state, dispatch] = useReducer(homeReducer, initialHomeState);
+  const checkInTriggerRef = useRef<HTMLButtonElement>(null);
+  const inviteTriggerRef = useRef<HTMLButtonElement>(null);
   const isRest = state.view === 'rest';
+  const durationWords: Record<number, string> = { 5: 'Cinco', 10: 'Dez', 15: 'Quinze', 20: 'Vinte' };
   return (
     <HomeShell hideBottomNav={state.view === 'active'}>
-      {isRest && <><div className="scene-wrap"><MuruScene lineProgress={state.lineProgress} mood="idle" /></div>
+      {isRest && <><div className="scene-wrap"><MuruScene lineProgress={state.lineProgress} mood="idle" stage={state.muruStage} /></div>
       <div className="home-copy">
         <p className="eyebrow">UM PASSO DE CADA VEZ</p>
         <h1>O que cabe no seu dia?</h1>
-        <p className="prompt">Cinco minutos para voltar para voce.</p>
-        <PrimaryAction label="Comecar 5 min" onClick={() => dispatch({ type: 'OPEN_CHECKIN' })} />
-        <button className="secondary-action" type="button" onClick={() => dispatch({ type: 'OPEN_INVITE' })}>Convidar alguem <span aria-hidden="true">&#8599;</span></button>
+        <p className="prompt">{durationWords[state.durationMinutes]} minutos para voltar para voce.</p>
+        <PrimaryAction buttonRef={checkInTriggerRef} label={`Comecar ${state.durationMinutes} min`} onClick={() => dispatch({ type: 'OPEN_CHECKIN' })} />
+        <button ref={inviteTriggerRef} className="secondary-action" type="button" onClick={() => dispatch({ type: 'OPEN_INVITE' })}>Convidar alguem <span aria-hidden="true">&#8599;</span></button>
       </div></>}
-      {state.view === 'checkin' && <CheckInSheet state={state} dispatch={dispatch} />}
-      {state.view === 'invite' && <SocialInviteSheet onJoin={() => dispatch({ type: 'JOIN_INVITE' })} onClose={() => dispatch({ type: 'CLOSE_OVERLAY' })} />}
+      {state.view === 'checkin' && <CheckInSheet state={state} dispatch={dispatch} returnFocusRef={checkInTriggerRef} />}
+      {state.view === 'invite' && <SocialInviteSheet participant={state.participant} durationMinutes={state.durationMinutes} onParticipantJoin={() => dispatch({ type: 'JOIN_INVITE' })} onStart={() => dispatch({ type: 'START_SOCIAL' })} onClose={() => dispatch({ type: 'CLOSE_OVERLAY' })} returnFocusRef={inviteTriggerRef} />}
       {state.view === 'active' && <ActiveSession state={state} dispatch={dispatch} />}
-      {state.view === 'capsule' && <CapsuleReveal outcome={state.sessionOutcome} onContinue={() => dispatch({ type: 'CAPSULE_CONTINUE' })} />}
+      {state.view === 'capsule' && <CapsuleReveal outcome={state.sessionOutcome} muruStage={state.muruStage} onContinue={() => dispatch({ type: 'CAPSULE_CONTINUE' })} />}
       {state.view === 'return' && <ReturnMessage onContinue={() => dispatch({ type: 'RETURN_CONTINUE' })} />}
     </HomeShell>
   );

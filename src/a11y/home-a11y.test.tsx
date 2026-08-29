@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 // @ts-expect-error The prototype intentionally does not depend on @types/node.
 import { fileURLToPath } from 'node:url';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import App from '../App';
 
@@ -50,5 +50,32 @@ describe('Home accessibility regressions', () => {
 
     expect(globalCss).toMatch(/:focus-visible\s*\{[\s\S]*outline\s*:\s*[^;]+[\s\S]*\}/);
     expect(globalCss).toMatch(/:focus-visible\s*\{[\s\S]*box-shadow\s*:\s*var\(--focus-ring\)[\s\S]*\}/);
+  });
+
+  it.each([
+    { trigger: /Comecar 5 min/i, title: /check-in/i },
+    { trigger: /Convidar alguem/i, title: /convidar alguem/i },
+  ])('moves focus into $title, traps Tab, closes on Escape, and restores the trigger', async ({ trigger, title }) => {
+    render(<App />);
+    const triggerButton = screen.getByRole('button', { name: trigger });
+    triggerButton.focus();
+    fireEvent.click(triggerButton);
+
+    const dialog = screen.getByRole('dialog', { name: title });
+    const closeButton = within(dialog).getByRole('button', { name: 'Fechar' });
+    expect(closeButton).toHaveFocus();
+    expect(document.querySelector('.app-header')).toHaveAttribute('aria-hidden', 'true');
+    expect(document.querySelector('.bottom-nav')).toHaveAttribute('aria-hidden', 'true');
+
+    const buttons = within(dialog).getAllByRole('button');
+    buttons.at(-1)?.focus();
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(closeButton).toHaveFocus();
+
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await waitFor(() => expect(screen.getByRole('button', { name: trigger })).toHaveFocus());
+    expect(document.querySelector('.app-header')).not.toHaveAttribute('aria-hidden');
+    expect(document.querySelector('.bottom-nav')).not.toHaveAttribute('aria-hidden');
   });
 });

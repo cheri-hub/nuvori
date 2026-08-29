@@ -1,4 +1,11 @@
+import { useSessionClock } from '../hooks/useSessionClock';
+
 export type HomeView = 'rest' | 'checkin' | 'invite' | 'active' | 'capsule' | 'return';
+
+export type PublicParticipant = {
+  displayName: string;
+  avatarInitials: string;
+};
 
 export type HomeState = {
   view: HomeView;
@@ -8,6 +15,8 @@ export type HomeState = {
   mood?: string;
   isSocial: boolean;
   isHost: boolean;
+  participant?: PublicParticipant;
+  muruStage: number;
   lineProgress: number;
   sessionOutcome?: string;
   startedAt?: number;
@@ -23,10 +32,11 @@ export type HomeAction =
   | { type: 'START_SOLO'; durationMinutes: number }
   | { type: 'OPEN_INVITE' }
   | { type: 'JOIN_INVITE' }
+  | { type: 'START_SOCIAL' }
   | { type: 'CLOSE_OVERLAY' }
   | { type: 'PAUSE_SESSION'; pausedAt: number }
   | { type: 'RESUME_SESSION'; resumedAt: number }
-  | { type: 'END_NORMAL' }
+  | { type: 'END_NORMAL'; endedAt: number }
   | { type: 'END_ADAPTED' }
   | { type: 'END_INTERRUPTED' }
   | { type: 'RETURN_CONTINUE' }
@@ -40,7 +50,9 @@ export const initialHomeState: HomeState = {
   mood: undefined,
   isSocial: false,
   isHost: true,
-  lineProgress: 0.34,
+  participant: undefined,
+  muruStage: 1,
+  lineProgress: 0,
   sessionOutcome: undefined,
   pausedSeconds: 0,
 };
@@ -63,32 +75,51 @@ export function homeReducer(state: HomeState, action: HomeAction): HomeState {
       return state.view === 'checkin' ? { ...state, mood: action.mood || undefined } : state;
     case 'START_SOLO':
       return state.view === 'checkin' && durations.has(action.durationMinutes)
-        ? { ...state, view: 'active', durationMinutes: action.durationMinutes, isSocial: false, isHost: true, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined }
+        ? { ...state, view: 'active', durationMinutes: action.durationMinutes, isSocial: false, isHost: true, participant: undefined, lineProgress: 0, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined }
         : state;
     case 'OPEN_INVITE':
-      return state.view === 'rest' ? { ...state, view: 'invite' } : state;
+      return state.view === 'rest' ? { ...state, view: 'invite', isHost: true, participant: undefined } : state;
     case 'JOIN_INVITE':
-      return state.view === 'invite' ? { ...state, view: 'active', isSocial: true, isHost: false, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined } : state;
+      return state.view === 'invite' && state.isHost
+        ? { ...state, isSocial: true, participant: { displayName: 'Lia Alves', avatarInitials: 'LA' } }
+        : state;
+    case 'START_SOCIAL':
+      return state.view === 'invite' && state.isHost && state.participant
+        ? { ...state, view: 'active', isSocial: true, lineProgress: 0, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined }
+        : state;
     case 'CLOSE_OVERLAY':
       return state.view === 'checkin' || state.view === 'invite' ? { ...state, view: 'rest' } : state;
     case 'PAUSE_SESSION':
-      return state.view === 'active' && state.pausedAt === undefined ? { ...state, pausedAt: action.pausedAt } : state;
+      return state.view === 'active' && state.isHost && state.pausedAt === undefined ? { ...state, pausedAt: action.pausedAt } : state;
     case 'RESUME_SESSION':
-      return state.view === 'active' && state.pausedAt !== undefined
+      return state.view === 'active' && state.isHost && state.pausedAt !== undefined
         ? { ...state, pausedAt: undefined, pausedSeconds: state.pausedSeconds + Math.max(0, action.resumedAt - state.pausedAt) / 1000 }
         : state;
-    case 'END_NORMAL':
+    case 'END_NORMAL': {
+      const isComplete = state.startedAt !== undefined && useSessionClock({
+        startedAt: state.startedAt,
+        durationSeconds: state.durationMinutes * 60,
+        pausedAt: state.pausedAt,
+        pausedSeconds: state.pausedSeconds,
+        now: action.endedAt,
+      }).isComplete;
+      return state.view === 'active' && state.isHost && isComplete
+        ? { ...state, view: 'capsule', sessionOutcome: 'normal', lineProgress: 1 }
+        : state;
+    }
     case 'END_ADAPTED':
-      return state.view === 'active'
-        ? { ...state, view: 'capsule', sessionOutcome: action.type === 'END_NORMAL' ? 'normal' : 'adapted', lineProgress: 1 }
+      return state.view === 'active' && state.isHost
+        ? { ...state, view: 'capsule', sessionOutcome: 'adapted', lineProgress: 1 }
         : state;
     case 'END_INTERRUPTED':
-      return state.view === 'active' ? { ...state, view: 'return', sessionOutcome: 'interrupted' } : state;
+      return state.view === 'active' && state.isHost ? { ...state, view: 'return', sessionOutcome: 'interrupted' } : state;
     case 'RETURN_CONTINUE':
-      return state.view === 'return' ? { ...state, view: 'rest', sessionOutcome: undefined } : state;
+      return state.view === 'return'
+        ? { ...state, view: 'rest', isSocial: false, participant: undefined, lineProgress: 0, sessionOutcome: undefined, startedAt: undefined, pausedAt: undefined, pausedSeconds: 0 }
+        : state;
     case 'CAPSULE_CONTINUE':
       return state.view === 'capsule' && (state.sessionOutcome === 'normal' || state.sessionOutcome === 'adapted')
-        ? { ...state, view: 'rest', sessionOutcome: undefined }
+        ? { ...state, view: 'rest', isSocial: false, participant: undefined, lineProgress: 0, sessionOutcome: undefined, startedAt: undefined, pausedAt: undefined, pausedSeconds: 0 }
         : state;
     default:
       return state;

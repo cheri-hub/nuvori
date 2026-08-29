@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ActiveSession } from './ActiveSession';
 import { initialHomeState, type HomeState } from '../state/homeReducer';
 
@@ -9,6 +9,8 @@ const activeState = (isHost: boolean): HomeState => ({
   isHost,
   startedAt: 1_000,
 });
+
+afterEach(() => vi.useRealTimers());
 
 describe('ActiveSession host controls', () => {
   it('shows host controls only to the host while participants retain the session view', () => {
@@ -25,5 +27,18 @@ describe('ActiveSession host controls', () => {
     expect(screen.queryByRole('button', { name: 'Encerrar' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Hoje esta dificil' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Preciso parar por hoje' })).toBeNull();
+  });
+
+  it('enables normal completion only after the displayed clock reaches zero', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(300_999));
+    const dispatch = vi.fn();
+    const { rerender } = render(<ActiveSession state={{ ...activeState(true), durationMinutes: 5 }} dispatch={dispatch} />);
+    expect(screen.getByRole('button', { name: 'Encerrar' })).toBeDisabled();
+
+    rerender(<ActiveSession state={{ ...activeState(true), durationMinutes: 5, startedAt: 1_000 }} dispatch={dispatch} />);
+    vi.setSystemTime(new Date(301_000));
+    act(() => vi.advanceTimersByTime(1_000));
+    expect(screen.getByRole('button', { name: 'Encerrar' })).toBeEnabled();
   });
 });

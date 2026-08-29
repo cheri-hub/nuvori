@@ -15,14 +15,14 @@ export function ActiveSession({ state, dispatch }: { state: HomeState; dispatch:
   return (
     <section className="active-session" aria-label="Sessao em andamento">
       <p className="eyebrow">AGORA</p>
-      <MuruScene lineProgress={Math.max(state.lineProgress, elapsedProgress)} mood="walking" />
+      <MuruScene lineProgress={Math.max(state.lineProgress, elapsedProgress)} mood="walking" stage={state.muruStage} />
       <p className="session-timer" aria-label={`${clock.remainingSeconds} segundos restantes`}>{String(Math.floor(clock.remainingSeconds / 60)).padStart(2, '0')}:{String(clock.remainingSeconds % 60).padStart(2, '0')}</p>
       <h1>Sessao em andamento</h1>
       <p className="session-line">A linha acompanha o tempo, sem medir desempenho.</p>
       {state.isHost && <>
         <div className="session-controls" role="group" aria-label="Controles do anfitriao">
           <button type="button" className="outline-action" onClick={() => isPaused ? dispatch({ type: 'RESUME_SESSION', resumedAt: Date.now() }) : dispatch({ type: 'PAUSE_SESSION', pausedAt: Date.now() })}>{isPaused ? 'Retomar' : 'Pausar'}</button>
-          <button type="button" className="outline-action" onClick={() => dispatch({ type: 'END_NORMAL' })}>Encerrar</button>
+          <button type="button" className="outline-action" disabled={!clock.isComplete} onClick={() => dispatch({ type: 'END_NORMAL', endedAt: now })}>Encerrar</button>
           <button type="button" className="primary-action" onClick={() => dispatch({ type: 'END_ADAPTED' })}>Hoje esta dificil</button>
         </div>
         <button type="button" className="secondary-action" onClick={() => dispatch({ type: 'END_INTERRUPTED' })}>Preciso parar por hoje</button>

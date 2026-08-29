@@ -1,13 +1,16 @@
-import { useState, type Dispatch } from 'react';
+import { useState, type Dispatch, type RefObject } from 'react';
 import { CheckInControls } from './CheckInControls';
+import { useModalDialog } from '../hooks/useModalDialog';
 import type { HomeAction, HomeState } from '../state/homeReducer';
 
-export function CheckInSheet({ state, dispatch }: { state: HomeState; dispatch: Dispatch<HomeAction> }) {
+export function CheckInSheet({ state, dispatch, returnFocusRef }: { state: HomeState; dispatch: Dispatch<HomeAction>; returnFocusRef: RefObject<HTMLButtonElement | null> }) {
   const [duration, setDuration] = useState(state.durationMinutes);
+  const close = () => dispatch({ type: 'CLOSE_OVERLAY' });
+  const { dialogRef, onKeyDown } = useModalDialog(close, returnFocusRef);
   return (
     <div className="sheet-backdrop">
-      <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="checkin-title">
-        <button className="sheet-close" type="button" onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })} aria-label="Fechar">&#215;</button>
+      <section ref={dialogRef} className="sheet" role="dialog" aria-modal="true" aria-labelledby="checkin-title" onKeyDown={onKeyDown}>
+        <button data-dialog-initial-focus className="sheet-close" type="button" onClick={close} aria-label="Fechar">&#215;</button>
         <p className="eyebrow">UM PASSO DE CADA VEZ</p>
         <h2 id="checkin-title">Check-in: como voce chega hoje?</h2>
         <CheckInControls state={state} dispatch={dispatch} />

@@ -12,17 +12,16 @@ describe('Home shell', () => {
     expect(screen.getByRole('button', { name: /Convidar alguem/i })).toBeVisible();
   });
 
-  it('renders the local Muru scene with accessible text and a partial first-step line', () => {
+  it('renders the local Muru scene with accessible text and an incomplete first-step line', () => {
     render(<App />);
     expect(screen.getByRole('img', { name: /Muru, seu companheiro de jornada/i })).toHaveAttribute('src', '/assets/muru-idle.svg');
     const line = screen.getByRole('img', { name: 'Primeiro passo' });
     const track = line.querySelector('.line-track');
     const lit = line.querySelector('.line-lit');
-    expect(line).toHaveAttribute('data-line-progress', '0.34');
+    expect(line).toHaveAttribute('data-line-progress', '0');
     expect(track).toBeTruthy();
     expect(lit).toHaveAttribute('pathLength', '1');
-    expect(lit).toHaveAttribute('data-line-progress', '0.34');
-    expect(Number(lit?.getAttribute('data-line-progress'))).toBeGreaterThan(0);
+    expect(lit).toHaveAttribute('data-line-progress', '0');
     expect(Number(lit?.getAttribute('data-line-progress'))).toBeLessThan(1);
     expect(track).not.toHaveAttribute('data-line-progress');
   });
@@ -74,5 +73,30 @@ describe('Home shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /Fechar/i }));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByRole('button', { name: /Comecar 5 min/i })).toBeVisible();
+  });
+
+  it('keeps a custom duration in the Home recommendation after a valid session', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /Comecar 5 min/i }));
+    fireEvent.click(screen.getByRole('button', { name: '10 minutos' }));
+    fireEvent.click(screen.getByRole('button', { name: /Comecar 10 min/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Hoje esta dificil/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Voltar ao inicio/i }));
+
+    expect(screen.getByRole('button', { name: /Comecar 10 min/i })).toBeVisible();
+    expect(screen.getByText(/Dez minutos para voltar para voce/i)).toBeVisible();
+  });
+
+  it('keeps the inviter as host while a public participant joins before the session starts', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /Convidar alguem/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Simular entrada de participante/i }));
+
+    expect(screen.getByText('Lia Alves')).toBeVisible();
+    expect(screen.getByLabelText(/Avatar publico de Lia Alves/i)).toBeVisible();
+    expect(screen.queryByRole('group', { name: /Controles do anfitriao/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Comecar sessao com Lia/i }));
+    expect(screen.getByRole('group', { name: /Controles do anfitriao/i })).toBeVisible();
   });
 });

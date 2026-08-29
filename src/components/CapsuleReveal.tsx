@@ -1,10 +1,12 @@
 import type { HomeState } from '../state/homeReducer';
+import { MuruScene } from './MuruScene';
 
-export function CapsuleReveal({ outcome, onContinue }: { outcome?: HomeState['sessionOutcome']; onContinue: () => void }) {
+export function CapsuleReveal({ outcome, muruStage, onContinue }: { outcome?: HomeState['sessionOutcome']; muruStage: number; onContinue: () => void }) {
   const hasReward = outcome === 'normal' || outcome === 'adapted';
   return (
     <section className="capsule-reveal" aria-label="Capsula">
       <p className="eyebrow">UM MOMENTO PARA VOCE</p>
+      <MuruScene lineProgress={1} mood="reward" stage={muruStage} />
       <div className="capsule-mark" aria-hidden="true">{hasReward ? '✦' : '—'}</div>
       <h1>{hasReward ? 'Sua capsula chegou' : 'Sessao encerrada'}</h1>
       <p>{hasReward ? 'Um pequeno reconhecimento por ter estado presente.' : 'Voce pode voltar quando fizer sentido.'}</p>
