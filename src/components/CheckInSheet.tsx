@@ -6,10 +6,10 @@ export function CheckInSheet({ state, dispatch }: { state: HomeState; dispatch: 
   const [duration, setDuration] = useState(state.durationMinutes);
   return (
     <div className="sheet-backdrop">
-      <section className="sheet" role="dialog" aria-modal="true" aria-label="Check-in">
+      <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="checkin-title">
         <button className="sheet-close" type="button" onClick={() => dispatch({ type: 'CLOSE_OVERLAY' })} aria-label="Fechar">&#215;</button>
         <p className="eyebrow">UM PASSO DE CADA VEZ</p>
-        <h2 id="checkin-title">Como voce chega hoje?</h2>
+        <h2 id="checkin-title">Check-in: como voce chega hoje?</h2>
         <CheckInControls state={state} dispatch={dispatch} />
         <div className="duration-choice" role="group" aria-label="Duracao">
           {[5, 10, 15, 20].map((minutes) => (

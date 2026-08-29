@@ -46,12 +46,22 @@ button {
 }
 
 :focus-visible {
-  outline: none;
+  outline: 3px solid var(--color-amber-pollen);
+  outline-offset: 3px;
   box-shadow: var(--focus-ring);
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-duration: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
   }
 }
