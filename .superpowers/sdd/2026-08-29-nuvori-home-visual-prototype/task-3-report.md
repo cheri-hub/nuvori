@@ -6,7 +6,9 @@ Complete. Local check-in and social invite flows are implemented in the Home pro
 
 ## Commit
 
-`9f85496 feat: add Nuvori check-in and social invite flows`
+`73f49ae feat: add Nuvori check-in and social invite flows`
+
+Accessibility review follow-up commit: `d841a05 fix: improve check-in accessibility semantics`.
 
 ## Files changed
 
@@ -66,3 +68,23 @@ built successfully
 ## Concerns
 
 The invite code is intentionally static and the join action is a local authenticated-participant placeholder, as required. Clipboard/share availability depends on browser support and is guarded with optional APIs.
+
+## Review follow-up verification
+
+- Duration options now expose `aria-pressed`; the five-minute option is announced as recommended.
+- Energy radio controls now show the existing focus ring on their visible adjacent indicator.
+- Added a check-in close regression test confirming the five-minute recommendation remains unchanged.
+
+```text
+npm test -- src/state/homeReducer.test.ts src/components/HomeShell.test.tsx
+Test Files  2 passed (2)
+Tests  13 passed (13)
+
+npm test
+Test Files  2 passed (2)
+Tests  13 passed (13)
+
+npm run build
+27 modules transformed
+built successfully
+```

@@ -59,6 +59,14 @@ describe('Home shell', () => {
     expect(screen.getByText(/sessao em andamento/i)).toBeVisible();
   });
 
+  it('closes check-in back to rest without changing the five-minute recommendation', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /Comecar 5 min/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Fechar/i }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: /Comecar 5 min/i })).toBeVisible();
+  });
+
   it('opens the invite sheet from the secondary action and closes it to rest', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: /Convidar alguem/i }));

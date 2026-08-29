@@ -13,7 +13,7 @@ export function CheckInSheet({ state, dispatch }: { state: HomeState; dispatch: 
         <CheckInControls state={state} dispatch={dispatch} />
         <div className="duration-choice" role="group" aria-label="Duracao">
           {[5, 10, 15, 20].map((minutes) => (
-            <button key={minutes} type="button" className={duration === minutes ? 'is-selected' : ''} onClick={() => setDuration(minutes)}>{minutes} min</button>
+            <button key={minutes} type="button" className={duration === minutes ? 'is-selected' : ''} aria-pressed={duration === minutes} aria-label={`${minutes} minutos${minutes === 5 ? ', recomendado' : ''}`} onClick={() => setDuration(minutes)}>{minutes} min</button>
           ))}
         </div>
         <button className="primary-action sheet-action" type="button" onClick={() => dispatch({ type: 'START_SOLO', durationMinutes: duration })}>Comecar {duration} min <span aria-hidden="true">&#8594;</span></button>

@@ -32,6 +32,7 @@ h1 { margin: 0; color: var(--color-nevoa); font: 600 clamp(2rem, 8vw, 3.2rem)/1.
 .choice-row, .duration-choice, .sheet-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 .choice input { position: absolute; opacity: 0; }
 .choice span, .duration-choice button, .outline-action { display: inline-grid; min-width: 2.5rem; min-height: 2.5rem; place-items: center; border: 1px solid rgba(29,41,38,.35); border-radius: var(--radius-md); padding: .5rem .75rem; }
+.choice:focus-within span { box-shadow: var(--focus-ring); }
 .choice input:checked + span, .duration-choice .is-selected { background: var(--color-musgo-profundo); color: var(--color-nevoa); }
 .checkin-controls input[type='range'] { width: 100%; accent-color: var(--color-coral-brasa); }
 .mood-field input { display: block; width: 100%; margin-top: .4rem; padding: .75rem; border: 1px solid rgba(29,41,38,.35); border-radius: var(--radius-md); background: transparent; }
