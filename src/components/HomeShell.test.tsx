@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import App from '../App';
 
@@ -49,5 +49,22 @@ describe('Home shell', () => {
     render(<App />);
     expect(document.querySelector('.hero-card, .streak-meter, .fitness-metrics, [style*="gradient"]')).toBeNull();
     expect(screen.queryByText(/streak|calorias|passos|fitness|metricas/i)).toBeNull();
+  });
+
+  it('opens check-in from the primary CTA and starts a five-minute session', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /Comecar 5 min/i }));
+    expect(screen.getByRole('dialog', { name: /check-in/i })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: /Comecar 5 min/i }));
+    expect(screen.getByText(/sessao em andamento/i)).toBeVisible();
+  });
+
+  it('opens the invite sheet from the secondary action and closes it to rest', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /Convidar alguem/i }));
+    expect(screen.getByRole('dialog', { name: /convidar alguem/i })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: /Fechar/i }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: /Comecar 5 min/i })).toBeVisible();
   });
 });

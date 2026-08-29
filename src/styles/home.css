@@ -23,4 +23,22 @@ h1 { margin: 0; color: var(--color-nevoa); font: 600 clamp(2rem, 8vw, 3.2rem)/1.
 .nav-item svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .nav-item.is-active { color: var(--color-mint-sinal); }
 .nav-item:focus-visible, .secondary-action:focus-visible, .primary-action:focus-visible, .icon-button:focus-visible { box-shadow: var(--focus-ring); }
+.sheet-backdrop { position: fixed; inset: 0; z-index: 10; display: grid; align-items: end; background: rgba(18,34,30,.72); }
+.sheet { position: relative; width: min(100%, 34rem); margin: 0 auto; padding: 2rem max(1.25rem, 5vw) 2.25rem; border-radius: 1rem 1rem 0 0; background: var(--color-nevoa); color: var(--color-tinta); text-align: left; }
+.sheet h2 { margin: 0 0 1.25rem; color: var(--color-tinta); font: 600 clamp(1.8rem, 7vw, 2.6rem)/1.05 var(--font-display); }
+.sheet-close { position: absolute; top: 1rem; right: 1.25rem; width: 2.5rem; height: 2.5rem; border: 1px solid rgba(29,41,38,.25); border-radius: 50%; font-size: 1.5rem; }
+.checkin-controls fieldset { padding: 0; margin: 0 0 1rem; border: 0; }
+.checkin-controls legend, .mood-field { display: block; margin-bottom: .5rem; font-weight: 600; }
+.choice-row, .duration-choice, .sheet-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.choice input { position: absolute; opacity: 0; }
+.choice span, .duration-choice button, .outline-action { display: inline-grid; min-width: 2.5rem; min-height: 2.5rem; place-items: center; border: 1px solid rgba(29,41,38,.35); border-radius: var(--radius-md); padding: .5rem .75rem; }
+.choice input:checked + span, .duration-choice .is-selected { background: var(--color-musgo-profundo); color: var(--color-nevoa); }
+.checkin-controls input[type='range'] { width: 100%; accent-color: var(--color-coral-brasa); }
+.mood-field input { display: block; width: 100%; margin-top: .4rem; padding: .75rem; border: 1px solid rgba(29,41,38,.35); border-radius: var(--radius-md); background: transparent; }
+.sheet-action { margin-top: 1.25rem; width: 100%; }
+.sheet-copy { margin-top: -.5rem; color: rgba(29,41,38,.72); }
+.invite-code { margin: 1.5rem 0 1rem; padding: 1rem; background: rgba(140,198,180,.22); color: var(--color-tinta); font: 500 1rem var(--font-mono); text-align: center; letter-spacing: .08em; }
+.waiting-state { margin: 1.25rem 0 0; color: rgba(29,41,38,.72); font: .8rem var(--font-mono); }
+.active-session { margin: auto; text-align: center; }
+.active-session p:last-child { color: rgba(241,238,228,.72); }
 @media (min-width: 48rem) { .home-content { padding-top: 2rem; } .bottom-nav { margin-bottom: 1rem; } }
