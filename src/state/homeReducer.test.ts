@@ -40,4 +40,39 @@ describe('homeReducer', () => {
     expect(next.view).toBe('rest');
     expect(next.durationMinutes).toBe(5);
   });
+
+  it('transitions a normal session into the capsule reveal', () => {
+    const active = { ...initialHomeState, view: 'active' as const, startedAt: 1_000 };
+    const next = homeReducer(active, { type: 'END_NORMAL' });
+    expect(next.view).toBe('capsule');
+    expect(next.sessionOutcome).toBe('normal');
+    expect(next.lineProgress).toBe(1);
+  });
+
+  it('transitions an adapted session into the capsule reveal', () => {
+    const next = homeReducer({ ...initialHomeState, view: 'active' as const }, { type: 'END_ADAPTED' });
+    expect(next.view).toBe('capsule');
+    expect(next.sessionOutcome).toBe('adapted');
+    expect(next.lineProgress).toBe(1);
+  });
+
+  it('returns an interrupted session without a reward', () => {
+    const next = homeReducer({ ...initialHomeState, view: 'active' as const, lineProgress: 0.5 }, { type: 'END_INTERRUPTED' });
+    expect(next.view).toBe('return');
+    expect(next.sessionOutcome).toBe('interrupted');
+    expect(next.lineProgress).toBe(0.5);
+  });
+
+  it('continues from a valid capsule back to rest at the completed stage', () => {
+    const next = homeReducer({ ...initialHomeState, view: 'capsule' as const, sessionOutcome: 'normal', lineProgress: 1 }, { type: 'CAPSULE_CONTINUE' });
+    expect(next.view).toBe('rest');
+    expect(next.lineProgress).toBe(1);
+    expect(next.sessionOutcome).toBeUndefined();
+  });
+
+  it('continues an interrupted return without changing the stage', () => {
+    const next = homeReducer({ ...initialHomeState, view: 'return' as const, sessionOutcome: 'interrupted' }, { type: 'RETURN_CONTINUE' });
+    expect(next.view).toBe('rest');
+    expect(next.lineProgress).toBe(initialHomeState.lineProgress);
+  });
 });

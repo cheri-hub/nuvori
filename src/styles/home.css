@@ -40,6 +40,14 @@ h1 { margin: 0; color: var(--color-nevoa); font: 600 clamp(2rem, 8vw, 3.2rem)/1.
 .sheet-copy { margin-top: -.5rem; color: rgba(29,41,38,.72); }
 .invite-code { margin: 1.5rem 0 1rem; padding: 1rem; background: rgba(140,198,180,.22); color: var(--color-tinta); font: 500 1rem var(--font-mono); text-align: center; letter-spacing: .08em; }
 .waiting-state { margin: 1.25rem 0 0; color: rgba(29,41,38,.72); font: .8rem var(--font-mono); }
-.active-session { margin: auto; text-align: center; }
-.active-session p:last-child { color: rgba(241,238,228,.72); }
+.active-session, .capsule-reveal, .return-message { width: 100%; margin: auto; text-align: center; }
+.active-session .muru-scene { width: min(100%, 24rem); margin: 0 auto; }
+.session-timer { margin: .25rem 0 .75rem; color: var(--color-amber-pollen); font: 500 clamp(2.6rem, 14vw, 4.5rem)/1 var(--font-mono); letter-spacing: 0; }
+.session-line, .capsule-reveal > p:not(.eyebrow), .return-message > p:not(.eyebrow) { color: rgba(241,238,228,.72); }
+.session-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin-top: 1.5rem; }
+.session-controls .primary-action { width: auto; }
+.capsule-mark { width: 5rem; height: 5rem; margin: 0 auto 1rem; display: grid; place-items: center; border: 1px solid var(--color-mint-sinal); border-radius: 50%; color: var(--color-amber-pollen); font-size: 2rem; animation: capsule-in var(--motion-duration) ease-out both; }
+.capsule-reveal > p:not(.eyebrow), .return-message > p:not(.eyebrow) { max-width: 28rem; margin: 1rem auto 1.75rem; }
+@keyframes capsule-in { from { opacity: 0; transform: scale(.88); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .capsule-mark { animation: none; } }
 @media (min-width: 48rem) { .home-content { padding-top: 2rem; } .bottom-nav { margin-bottom: 1rem; } }

@@ -1,6 +1,9 @@
 import { useReducer } from 'react';
 import { HomeShell } from './components/HomeShell';
 import { MuruScene } from './components/MuruScene';
+import { ActiveSession } from './components/ActiveSession';
+import { CapsuleReveal } from './components/CapsuleReveal';
+import { ReturnMessage } from './components/ReturnMessage';
 import { PrimaryAction } from './components/PrimaryAction';
 import './styles/home.css';
 import { CheckInSheet } from './components/CheckInSheet';
@@ -11,7 +14,7 @@ export default function App() {
   const [state, dispatch] = useReducer(homeReducer, initialHomeState);
   const isRest = state.view === 'rest';
   return (
-    <HomeShell>
+    <HomeShell hideBottomNav={state.view === 'active'}>
       {isRest && <><div className="scene-wrap"><MuruScene lineProgress={state.lineProgress} mood="idle" /></div>
       <div className="home-copy">
         <p className="eyebrow">UM PASSO DE CADA VEZ</p>
@@ -22,7 +25,9 @@ export default function App() {
       </div></>}
       {state.view === 'checkin' && <CheckInSheet state={state} dispatch={dispatch} />}
       {state.view === 'invite' && <SocialInviteSheet onJoin={() => dispatch({ type: 'JOIN_INVITE' })} onClose={() => dispatch({ type: 'CLOSE_OVERLAY' })} />}
-      {state.view === 'active' && <div className="active-session" role="status"><p className="eyebrow">AGORA</p><h1>Sessao em andamento</h1><p>{state.durationMinutes} minutos para voltar para voce.</p></div>}
+      {state.view === 'active' && <ActiveSession state={state} dispatch={dispatch} />}
+      {state.view === 'capsule' && <CapsuleReveal outcome={state.sessionOutcome} onContinue={() => dispatch({ type: 'CAPSULE_CONTINUE' })} />}
+      {state.view === 'return' && <ReturnMessage onContinue={() => dispatch({ type: 'RETURN_CONTINUE' })} />}
     </HomeShell>
   );
 }
