@@ -8,7 +8,7 @@ Complete. Active session timing, host pause/resume controls, normal/adapted/inte
 
 `2df15cd feat: add Nuvori session and capsule states`.
 
-Fix commit: `6ce126c fix: restrict session controls to host`.
+Fix commit: `afa8560 fix: restrict session controls to host`.
 
 ## Files changed
 
@@ -75,3 +75,7 @@ RED: `npm test -- src/components/ActiveSession.test.tsx` failed because the part
 GREEN: `npm test -- src/components/ActiveSession.test.tsx src/hooks/useSessionClock.test.ts src/state/homeReducer.test.ts src/components/HomeShell.test.tsx` passed with 4 test files and 22 tests.
 
 The full suite and build were rerun after the fix and passed.
+
+## Documentation update
+
+Commit metadata corrected to reference the actual feature commit (`2df15cd`) and host-control fix commit (`afa8560`). Code is unchanged by this update.
