@@ -1,6 +1,12 @@
+// @ts-expect-error The prototype intentionally does not depend on @types/node.
+import { readFileSync } from 'node:fs';
+// @ts-expect-error The prototype intentionally does not depend on @types/node.
+import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import App from '../App';
+
+declare const process: { cwd(): string };
 
 afterEach(cleanup);
 
@@ -36,5 +42,16 @@ describe('Home accessibility regressions', () => {
     expect(primary).toHaveClass('primary-action');
     expect(primary).toHaveFocus();
     expect(primary).not.toHaveAttribute('tabindex', '-1');
+  });
+
+  it('defines a visible focus ring in the global focus-visible rule', () => {
+    const cssUrl = new URL('../styles/global.css', import.meta.url);
+    const cssPath = cssUrl.protocol === 'file:'
+      ? fileURLToPath(cssUrl)
+      : `${process.cwd()}/src/styles/global.css`;
+    const globalCss = readFileSync(cssPath, 'utf8');
+
+    expect(globalCss).toMatch(/:focus-visible\s*\{[\s\S]*outline\s*:\s*[^;]+[\s\S]*\}/);
+    expect(globalCss).toMatch(/:focus-visible\s*\{[\s\S]*box-shadow\s*:\s*var\(--focus-ring\)[\s\S]*\}/);
   });
 });
