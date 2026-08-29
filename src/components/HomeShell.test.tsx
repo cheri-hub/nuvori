@@ -16,8 +16,26 @@ describe('Home shell', () => {
     render(<App />);
     expect(screen.getByRole('img', { name: /Muru, seu companheiro de jornada/i })).toHaveAttribute('src', '/assets/muru-idle.svg');
     const line = screen.getByRole('img', { name: 'Primeiro passo' });
+    const track = line.querySelector('.line-track');
+    const lit = line.querySelector('.line-lit');
     expect(line).toHaveAttribute('data-line-progress', '0.34');
-    expect(line.querySelector('.line-lit')).toBeTruthy();
+    expect(track).toBeTruthy();
+    expect(lit).toHaveAttribute('pathLength', '1');
+    expect(lit).toHaveAttribute('data-line-progress', '0.34');
+    expect(Number(lit?.getAttribute('data-line-progress'))).toBeGreaterThan(0);
+    expect(Number(lit?.getAttribute('data-line-progress'))).toBeLessThan(1);
+    expect(track).not.toHaveAttribute('data-line-progress');
+  });
+
+  it('keeps the expected shell hierarchy and profile affordance', () => {
+    render(<App />);
+    const shell = document.querySelector('.home-shell');
+    expect(shell).toBeTruthy();
+    expect(shell?.querySelector('.app-header')).toBeTruthy();
+    expect(shell?.querySelector('.home-content')).toBeTruthy();
+    expect(shell?.querySelector('.home-content .scene-wrap .muru-scene')).toBeTruthy();
+    expect(shell?.querySelector('.bottom-nav')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Abrir perfil' })).toBeVisible();
   });
 
   it('provides the four primary navigation destinations', () => {

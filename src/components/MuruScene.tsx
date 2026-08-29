@@ -12,7 +12,7 @@ export function MuruScene({ lineProgress, mood }: MuruSceneProps) {
       <img className="muru-image" src="/assets/muru-idle.svg" alt="Muru, seu companheiro de jornada" />
       <svg className="first-step-line" viewBox="0 0 280 90" role="img" aria-label="Primeiro passo" data-line-progress={progress}>
         <path className="line-track" d="M16 63 C48 22, 78 78, 112 43 S174 12, 195 48 S240 70, 264 26" />
-        <path className="line-lit" pathLength="1" d="M16 63 C48 22, 78 78, 112 43 S174 12, 195 48 S240 70, 264 26" />
+        <path className="line-lit" pathLength="1" data-line-progress={progress} d="M16 63 C48 22, 78 78, 112 43 S174 12, 195 48 S240 70, 264 26" />
       </svg>
     </div>
   );
