@@ -6,7 +6,9 @@ Complete. Active session timing, host pause/resume controls, normal/adapted/inte
 
 ## Commit
 
-`b18ce3b feat: add Nuvori session and capsule states`.
+`2df15cd feat: add Nuvori session and capsule states`.
+
+Fix commit: `6ce126c fix: restrict session controls to host`.
 
 ## Files changed
 
@@ -20,6 +22,7 @@ Complete. Active session timing, host pause/resume controls, normal/adapted/inte
 - `src/components/HomeShell.tsx`
 - `src/App.tsx`
 - `src/styles/home.css`
+- `src/components/ActiveSession.test.tsx`
 
 ## TDD evidence
 
@@ -58,8 +61,17 @@ dist build completed successfully
 - Active view hides bottom navigation, uses IBM Plex Mono for the timer, renders Muru walking, and exposes prototype host controls.
 - Capsule reveal uses one restrained scale/fade moment and disables it under `prefers-reduced-motion`.
 - No backend, realtime, authentication, payment, metric, streak, or performance behavior was added.
+- `isHost` keeps pause, resume, end, adaptation, and interruption controls exclusive to the host; participants retain the timer and Muru view.
 
 ## Concerns
 
 - Session timestamps use `Date.now()` at reducer start/join because the prototype has no backend clock. The clock itself remains deterministic when `now` is supplied.
 - The session does not auto-dispatch an end action when the timer reaches zero; ending remains an explicit host control in this prototype.
+
+## Fix verification
+
+RED: `npm test -- src/components/ActiveSession.test.tsx` failed because the participant still rendered the host-control group.
+
+GREEN: `npm test -- src/components/ActiveSession.test.tsx src/hooks/useSessionClock.test.ts src/state/homeReducer.test.ts src/components/HomeShell.test.tsx` passed with 4 test files and 22 tests.
+
+The full suite and build were rerun after the fix and passed.

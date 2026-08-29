@@ -7,6 +7,7 @@ export type HomeState = {
   resistance?: number;
   mood?: string;
   isSocial: boolean;
+  isHost: boolean;
   lineProgress: number;
   sessionOutcome?: string;
   startedAt?: number;
@@ -38,6 +39,7 @@ export const initialHomeState: HomeState = {
   resistance: undefined,
   mood: undefined,
   isSocial: false,
+  isHost: true,
   lineProgress: 0.34,
   sessionOutcome: undefined,
   pausedSeconds: 0,
@@ -61,12 +63,12 @@ export function homeReducer(state: HomeState, action: HomeAction): HomeState {
       return state.view === 'checkin' ? { ...state, mood: action.mood || undefined } : state;
     case 'START_SOLO':
       return state.view === 'checkin' && durations.has(action.durationMinutes)
-        ? { ...state, view: 'active', durationMinutes: action.durationMinutes, isSocial: false, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined }
+        ? { ...state, view: 'active', durationMinutes: action.durationMinutes, isSocial: false, isHost: true, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined }
         : state;
     case 'OPEN_INVITE':
       return state.view === 'rest' ? { ...state, view: 'invite' } : state;
     case 'JOIN_INVITE':
-      return state.view === 'invite' ? { ...state, view: 'active', isSocial: true, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined } : state;
+      return state.view === 'invite' ? { ...state, view: 'active', isSocial: true, isHost: false, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined } : state;
     case 'CLOSE_OVERLAY':
       return state.view === 'checkin' || state.view === 'invite' ? { ...state, view: 'rest' } : state;
     case 'PAUSE_SESSION':
