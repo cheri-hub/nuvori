@@ -8,7 +8,7 @@ Complete. Local check-in and social invite flows are implemented in the Home pro
 
 `73f49ae feat: add Nuvori check-in and social invite flows`
 
-Accessibility review follow-up commit: `d841a05 fix: improve check-in accessibility semantics`.
+Accessibility review follow-up commit: `0316881 fix: improve check-in accessibility semantics`.
 
 ## Files changed
 
