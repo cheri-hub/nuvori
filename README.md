@@ -1,6 +1,6 @@
 # Nuvori visual prototype
 
-Nuvori is a browser-only visual prototype for the authenticated Home and first-start loop. It uses React, Vite, and local reducer state; there is no account, persistence, network, or backend service.
+Nuvori is a browser-first prototype for the authenticated Home and first-start loop. It uses React, Vite, and local reducer state in the UI, with a Supabase-ready session contract that can be connected after the project is provisioned.
 
 ## Local review
 
@@ -22,9 +22,25 @@ The Home reducer moves through `rest`, `checkin`, `invite`, `active`, `capsule`,
 
 The invite sheet includes a local host-side simulation of an authenticated participant joining. It displays only a fixed public name and avatar, keeps the inviter as host, and does not perform authentication or networking.
 
+## Backend foundation
+
+`src/services/sessionRepository.ts` is a deterministic in-memory adapter for the first social contract: a host creates an invite-backed session, one participant joins, the host starts and ends it, and a valid ending grants one reward per member. It deliberately uses the same lifecycle rules that the future API must enforce, including host-only mutations, timestamp-gated normal completion, and idempotent repeated end requests.
+
+`src/services/retention.ts` keeps the seven-day return rule explicit: the future API should emit a return event when a later session starts within seven days of the first session, even if that new session is later interrupted.
+
+The Supabase migration at `supabase/migrations/0001_nuvori_sessions.sql` creates profiles, sessions, membership, private check-ins and outcomes, idempotent rewards, analytics events, indexes, and baseline row-level security. It includes the server timestamps and pause/presence fields needed for a synchronized social timer.
+
+After creating the Supabase project:
+
+1. Copy `.env.example` to `.env.local` and fill `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+2. Apply the migration with the Supabase CLI (`supabase db push`) or the SQL editor.
+3. Keep the service-role key on the future Node.js API only; never expose it in the Vite client.
+
+Until those steps are complete, the UI remains fully runnable with the local adapter and no network credentials.
+
 ## Deliberate non-goals
 
-This prototype does not implement authentication, Supabase persistence, real-time social sessions, invitations delivered through a service, analytics, notifications, offline sync, GPS, fitness metrics, streaks, or a production reward inventory.
+The browser prototype does not yet implement authentication, Supabase client wiring, real-time channel subscriptions, invitations delivered through a service, notifications, offline sync, GPS, fitness metrics, streaks, or a production reward inventory. The migration and repository contract define that next integration boundary without pretending those services are already live.
 
 ## Integration boundary
 
