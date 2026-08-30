@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { HomeShell } from './components/HomeShell';
 import { MuruScene } from './components/MuruScene';
 import { ActiveSession } from './components/ActiveSession';
@@ -12,7 +12,9 @@ import { homeReducer, initialHomeState, type HomeAction } from './state/homeRedu
 import { AuthGate } from './components/AuthGate';
 import { useSupabaseAuth } from './hooks/useSupabaseAuth';
 import { useRemoteSession } from './hooks/useRemoteSession';
+import { useInviteDeepLink } from './hooks/useInviteDeepLink';
 import type { SessionSnapshot } from './services/sessionRepository';
+import { buildInviteLink, parseInviteLink, type InviteLink } from './services/inviteLink';
 
 function makeInviteToken(): string {
   if (typeof globalThis.crypto?.randomUUID === 'function') return `${crypto.randomUUID()}${crypto.randomUUID()}`;
@@ -55,22 +57,26 @@ export default function App() {
     }
   }, [remote.snapshot, state.view, state.participant]);
 
-  useEffect(() => {
-    if (!remoteEnabled || !auth.user || remote.sessionId) return;
-    const url = new URL(window.location.href);
-    const sessionId = url.searchParams.get('session');
-    const inviteToken = url.searchParams.get('invite');
-    if (!sessionId || !inviteToken || joinAttemptRef.current === `${sessionId}:${inviteToken}`) return;
-    joinAttemptRef.current = `${sessionId}:${inviteToken}`;
+  const acceptInvite = useCallback((invite: InviteLink) => {
+    if (!remoteEnabled || !auth.user || remote.sessionId || joinAttemptRef.current === `${invite.sessionId}:${invite.inviteToken}`) return;
+    joinAttemptRef.current = `${invite.sessionId}:${invite.inviteToken}`;
     dispatch({ type: 'OPEN_INVITE' });
-    void remote.join({ sessionId, inviteToken, displayName: displayNameFor(auth.user) })
+    void remote.join({ sessionId: invite.sessionId, inviteToken: invite.inviteToken, displayName: displayNameFor(auth.user) })
       .then((snapshot) => {
         dispatch({ type: 'ATTACH_REMOTE_SESSION', sessionId: snapshot.id });
         if (snapshot.members.length >= 2) dispatch({ type: 'JOIN_INVITE' });
+        const url = new URL(window.location.href);
         window.history.replaceState({}, '', `${url.pathname}${url.hash}`);
       })
       .catch(() => undefined);
   }, [auth.user, remote, remoteEnabled]);
+
+  useInviteDeepLink(acceptInvite);
+
+  useEffect(() => {
+    const invite = parseInviteLink(window.location.href);
+    if (invite) acceptInvite(invite);
+  }, [acceptInvite]);
 
   function handleOpenInvite() {
     dispatch({ type: 'OPEN_INVITE' });
@@ -124,7 +130,7 @@ export default function App() {
   }
 
   const inviteValue = remote.inviteToken && remote.sessionId
-    ? `${window.location.origin}/?session=${remote.sessionId}&invite=${remote.inviteToken}`
+    ? buildInviteLink(window.location.origin, remote.sessionId, remote.inviteToken)
     : `NUVORI-${state.durationMinutes}MIN`;
 
   return <AuthGate><HomeShell hideBottomNav={state.view === 'active'}>

@@ -1,6 +1,6 @@
 # Nuvori visual prototype
 
-Nuvori is a browser-first prototype for the authenticated Home and first-start loop. It uses React, Vite, and local reducer state in the UI, with a Supabase-ready session contract that can be connected after the project is provisioned.
+Nuvori is a browser-first prototype for the authenticated Home and first-start loop. It uses React, Vite, a local reducer for presentation state, and Supabase for identity, shared sessions, and Realtime synchronization when the public client variables are configured.
 
 ## Local review
 
@@ -33,7 +33,7 @@ The output is `android/app/build/outputs/apk/debug/app-debug.apk`. Install it on
 
 The Home reducer moves through `rest`, `checkin`, `invite`, `active`, `capsule`, and `return`. Check-in values, recommended duration, per-session line progress, persistent Muru stage, social participation, pause state, and the session outcome exist only in in-memory React state and reset on reload. Normal completion is gated by the timestamp-derived clock; adapted and interrupted endings remain explicit early exits. Normal and adapted sessions show a capsule, while interrupted sessions return without a reward.
 
-The invite sheet includes a local host-side simulation of an authenticated participant joining. It displays only a fixed public name and avatar, keeps the inviter as host, and does not perform authentication or networking.
+The invite sheet supports both a local simulation and the remote Supabase path. In remote mode the host creates a real session and receives a shareable URL containing the session and invite token. A second authenticated account can join with that URL; the host remains the only account allowed to start, pause, resume, or end the session.
 
 ## Backend foundation
 
@@ -51,10 +51,24 @@ After creating the Supabase project:
 
 `src/lib/supabase.ts` now initializes the official client only when those public variables are present. Until they are configured, the UI remains fully runnable with the local adapter and no network credentials.
 
+`src/services/profileService.ts` creates or updates the signed-in user's public profile on authentication. `src/services/inviteLink.ts` centralizes invite URL creation and parsing. The Android shell registers the `nuvori://session?...` scheme and forwards incoming links to the same join flow used by the browser.
+
+For passwordless email authentication, add the local and deployed app URLs to Supabase Auth's URL configuration (for example `http://localhost:5173`, your deployed HTTPS origin, and the app's HTTPS callback URL). The client never receives a service-role key.
+
+## Two-account smoke test
+
+1. Open the app in two browser profiles or on two devices and authenticate with different email accounts.
+2. On account A, complete check-in and choose **Convidar alguém**. Copy the generated link.
+3. Open the link while signed in as account B. Account B should appear in the invite sheet without changing the host role.
+4. Start the session from account A. Both clients should enter the active view and show the same server-backed clock.
+5. Pause, resume, and end from account A, checking that account B follows the Realtime updates. Repeat an interrupted end and verify no capsule is granted.
+
+On Android, install the debug APK and open the invite link with the `nuvori://session` scheme. The same join callback is used when the app is already open or launched from a cold start.
+
 ## Deliberate non-goals
 
-The browser prototype does not yet implement authentication, Supabase client wiring, real-time channel subscriptions, invitations delivered through a service, notifications, offline sync, GPS, fitness metrics, streaks, or a production reward inventory. The migration and repository contract define that next integration boundary without pretending those services are already live.
+The prototype does not yet include a production API boundary, offline conflict resolution, host timeout recovery, push notifications, GPS, fitness metrics, streaks, a profile editing surface, or a production reward inventory. Email delivery and redirect configuration still depend on the Supabase project settings. The local adapter remains available for deterministic UI tests.
 
 ## Integration boundary
 
-The next implementation boundary is the social prototype specification: replace the local reducer transitions with Supabase Auth for identity, Supabase-backed session and capsule records, and API/realtime coordination for invite and participant state. Keep the current presentational components and state names as the UI contract while those adapters are introduced.
+The next implementation boundary is production hardening: add explicit loading/error recovery for expired invites and dropped Realtime channels, expose profile editing, and move reward and retention analytics behind server-side policies. Keep the current presentational components and state names as the UI contract while those adapters mature.

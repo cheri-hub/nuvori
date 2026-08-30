@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { getCurrentUser, requestMagicLink, signOut, subscribeToAuthChanges } from '../services/authService';
+import { ensureProfile } from '../services/profileService';
 
 type AuthHookState = {
   user: User | null;
@@ -26,7 +27,10 @@ export function useSupabaseAuth(): AuthHookState {
     if (!configured) return undefined;
     let mounted = true;
     getCurrentUser()
-      .then((currentUser) => { if (mounted) setUser(currentUser); })
+      .then((currentUser) => {
+        if (mounted) setUser(currentUser);
+        if (currentUser) void ensureProfile(currentUser).catch((profileError) => { if (import.meta.env.DEV) console.error(profileError); });
+      })
       .catch((authError) => { if (mounted) setError(errorMessage(authError, 'Nao foi possivel abrir sua sessao.')); })
       .finally(() => { if (mounted) setLoading(false); });
     const unsubscribe = subscribeToAuthChanges(({ session }) => {
@@ -34,6 +38,7 @@ export function useSupabaseAuth(): AuthHookState {
         setUser(session?.user ?? null);
         setLoading(false);
       }
+      if (session?.user) void ensureProfile(session.user).catch((profileError) => { if (import.meta.env.DEV) console.error(profileError); });
     });
     return () => {
       mounted = false;
