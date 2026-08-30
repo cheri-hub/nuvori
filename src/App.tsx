@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { HomeShell } from './components/HomeShell';
 import { MuruScene } from './components/MuruScene';
 import { ActiveSession } from './components/ActiveSession';
@@ -129,8 +130,9 @@ export default function App() {
     if (outcome === 'interrupted') dispatch({ type: 'END_INTERRUPTED' });
   }
 
+  const inviteOrigin = Capacitor.isNativePlatform() ? 'nuvori://session' : window.location.origin;
   const inviteValue = remote.inviteToken && remote.sessionId
-    ? buildInviteLink(window.location.origin, remote.sessionId, remote.inviteToken)
+    ? buildInviteLink(inviteOrigin, remote.sessionId, remote.inviteToken)
     : `NUVORI-${state.durationMinutes}MIN`;
 
   return <AuthGate><HomeShell hideBottomNav={state.view === 'active'}>
