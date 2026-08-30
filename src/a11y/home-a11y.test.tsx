@@ -1,6 +1,4 @@
-// @ts-expect-error The prototype intentionally does not depend on @types/node.
 import { readFileSync } from 'node:fs';
-// @ts-expect-error The prototype intentionally does not depend on @types/node.
 import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';

@@ -9,6 +9,7 @@ import './styles/home.css';
 import { CheckInSheet } from './components/CheckInSheet';
 import { SocialInviteSheet } from './components/SocialInviteSheet';
 import { homeReducer, initialHomeState } from './state/homeReducer';
+import { AuthGate } from './components/AuthGate';
 
 export default function App() {
   const [state, dispatch] = useReducer(homeReducer, initialHomeState);
@@ -16,8 +17,7 @@ export default function App() {
   const inviteTriggerRef = useRef<HTMLButtonElement>(null);
   const isRest = state.view === 'rest';
   const durationWords: Record<number, string> = { 5: 'Cinco', 10: 'Dez', 15: 'Quinze', 20: 'Vinte' };
-  return (
-    <HomeShell hideBottomNav={state.view === 'active'}>
+  return <AuthGate><HomeShell hideBottomNav={state.view === 'active'}>
       {isRest && <><div className="scene-wrap"><MuruScene lineProgress={state.lineProgress} mood="idle" stage={state.muruStage} /></div>
       <div className="home-copy">
         <p className="eyebrow">UM PASSO DE CADA VEZ</p>
@@ -31,6 +31,5 @@ export default function App() {
       {state.view === 'active' && <ActiveSession state={state} dispatch={dispatch} />}
       {state.view === 'capsule' && <CapsuleReveal outcome={state.sessionOutcome} muruStage={state.muruStage} onContinue={() => dispatch({ type: 'CAPSULE_CONTINUE' })} />}
       {state.view === 'return' && <ReturnMessage onContinue={() => dispatch({ type: 'RETURN_CONTINUE' })} />}
-    </HomeShell>
-  );
+    </HomeShell></AuthGate>;
 }
