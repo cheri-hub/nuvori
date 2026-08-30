@@ -32,11 +32,11 @@ The Supabase migration at `supabase/migrations/0001_nuvori_sessions.sql` creates
 
 After creating the Supabase project:
 
-1. Copy `.env.example` to `.env.local` and fill `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+1. Copy `.env.example` to `.env.local` and fill `VITE_SUPABASE_URL` plus `VITE_SUPABASE_PUBLISHABLE_KEY` (or the legacy `VITE_SUPABASE_ANON_KEY`).
 2. Apply the migration with the Supabase CLI (`supabase db push`) or the SQL editor.
 3. Keep the service-role key on the future Node.js API only; never expose it in the Vite client.
 
-Until those steps are complete, the UI remains fully runnable with the local adapter and no network credentials.
+`src/lib/supabase.ts` now initializes the official client only when those public variables are present. Until they are configured, the UI remains fully runnable with the local adapter and no network credentials.
 
 ## Deliberate non-goals
 

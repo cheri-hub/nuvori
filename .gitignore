@@ -2,3 +2,5 @@ node_modules/
 dist/
 .superpowers/
 *.local
+.secrets
+supabase/.temp/
