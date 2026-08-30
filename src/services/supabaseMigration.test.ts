@@ -40,3 +40,15 @@ describe('social session command migration', () => {
     expect(sql).toContain('s.host_user_id = auth.uid() or public.is_session_member(s.id)');
   });
 });
+
+describe('solo session command migration', () => {
+  it('defines protected solo lifecycle RPCs and records returns', () => {
+    const sql = readMigration('0004_solo_session_commands.sql');
+
+    expect(sql).toContain('function public.create_solo_session');
+    expect(sql).toContain('function public.start_solo_session');
+    expect(sql).toContain("'return_session_started'");
+    expect(sql).toContain('grant execute on function public.start_solo_session');
+    expect(sql).toContain('energy between 1 and 5');
+  });
+});

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { RemoteSessionClient } from './supabaseSessionService';
-import { RemoteSessionError, createRemoteSession, endRemoteSession, subscribeToRemoteSession } from './supabaseSessionService';
+import { RemoteSessionError, createRemoteSession, createRemoteSoloSession, endRemoteSession, saveRemoteCheckIn, startRemoteSoloSession, subscribeToRemoteSession } from './supabaseSessionService';
 
 function snapshotPayload() {
   return {
@@ -29,6 +29,43 @@ describe('supabaseSessionService', () => {
     }));
     expect(result.session.id).toBe('session-1');
     expect(result.inviteToken).toBe('token-1234567890');
+  });
+
+  it('creates and starts an authenticated solo session through protected RPCs', async () => {
+    const client = {
+      rpc: vi.fn()
+        .mockResolvedValueOnce({ data: { session: snapshotPayload() }, error: null })
+        .mockResolvedValueOnce({ data: snapshotPayload(), error: null }),
+    } as unknown as RemoteSessionClient;
+
+    const created = await createRemoteSoloSession({ plannedSeconds: 300 }, client);
+    const started = await startRemoteSoloSession(created.id, client);
+
+    expect(client.rpc).toHaveBeenNthCalledWith(1, 'create_solo_session', { p_planned_seconds: 300 });
+    expect(client.rpc).toHaveBeenNthCalledWith(2, 'start_solo_session', { p_session_id: 'session-1' });
+    expect(started.status).toBe('active');
+  });
+
+  it('upserts a private check-in for the authenticated user', async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    const client = { from: vi.fn().mockReturnValue({ upsert }) } as unknown as RemoteSessionClient;
+
+    await saveRemoteCheckIn({
+      sessionId: 'session-1',
+      userId: 'user-host',
+      energy: 3,
+      resistance: 7,
+      mood: 'focado',
+    }, client);
+
+    expect(client.from).toHaveBeenCalledWith('session_checkins');
+    expect(upsert).toHaveBeenCalledWith({
+      session_id: 'session-1',
+      user_id: 'user-host',
+      energy: 3,
+      resistance: 7,
+      mood: 'focado',
+    }, { onConflict: 'session_id,user_id' });
   });
 
   it('converts RPC failures to a stable remote session error', async () => {

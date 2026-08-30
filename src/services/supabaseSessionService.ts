@@ -8,9 +8,14 @@ export type RemoteSessionChannel = {
   unsubscribe: () => Promise<unknown> | unknown;
 };
 
+export type RemoteSessionTable = {
+  upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => Promise<{ error: { message: string } | null }>;
+};
+
 export type RemoteSessionClient = {
   rpc: (functionName: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
   channel: (name: string) => RemoteSessionChannel;
+  from: (table: string) => RemoteSessionTable;
 };
 
 export class RemoteSessionError extends Error {
@@ -104,6 +109,15 @@ export async function createRemoteSession(
   return { session: snapshotFrom(record), inviteToken: record.invite_token };
 }
 
+export async function createRemoteSoloSession(
+  input: { plannedSeconds: number },
+  client: RemoteSessionClient | null = defaultClient,
+): Promise<SessionSnapshot> {
+  return snapshotFrom(await callRpc('create_solo_session', {
+    p_planned_seconds: input.plannedSeconds,
+  }, client));
+}
+
 export async function joinRemoteSession(
   input: { sessionId: string; inviteToken: string; displayName: string },
   client: RemoteSessionClient | null = defaultClient,
@@ -117,6 +131,24 @@ export async function joinRemoteSession(
 
 export async function startRemoteSession(sessionId: string, client: RemoteSessionClient | null = defaultClient): Promise<SessionSnapshot> {
   return snapshotFrom(await callRpc('start_social_session', { p_session_id: sessionId }, client));
+}
+
+export async function startRemoteSoloSession(sessionId: string, client: RemoteSessionClient | null = defaultClient): Promise<SessionSnapshot> {
+  return snapshotFrom(await callRpc('start_solo_session', { p_session_id: sessionId }, client));
+}
+
+export async function saveRemoteCheckIn(
+  input: { sessionId: string; userId: string; energy?: number; resistance?: number; mood?: string },
+  client: RemoteSessionClient | null = defaultClient,
+): Promise<void> {
+  const { error } = await requireClient(client).from('session_checkins').upsert({
+    session_id: input.sessionId,
+    user_id: input.userId,
+    energy: input.energy ?? null,
+    resistance: input.resistance ?? null,
+    mood: input.mood?.trim() || null,
+  }, { onConflict: 'session_id,user_id' });
+  if (error) throw new RemoteSessionError(error.message);
 }
 
 export async function pauseRemoteSession(sessionId: string, client: RemoteSessionClient | null = defaultClient): Promise<SessionSnapshot> {

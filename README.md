@@ -53,6 +53,8 @@ After creating the Supabase project:
 
 `src/services/profileService.ts` creates or updates the signed-in user's public profile on authentication. `src/services/inviteLink.ts` centralizes invite URL creation and parsing. The Android shell registers the `nuvori://session?...` scheme and forwards incoming links to the same join flow used by the browser.
 
+Authenticated solo sessions use the `create_solo_session` and `start_solo_session` RPCs from migration `0004_solo_session_commands.sql`. The check-in is written to `session_checkins` before the server starts the timer; ending the session uses the same outcome, reward, and seven-day return rules as social sessions.
+
 For passwordless email authentication, add the local and deployed app URLs to Supabase Auth's URL configuration (for example `http://localhost:5173`, your deployed HTTPS origin, and the app's HTTPS callback URL). The client never receives a service-role key.
 
 ## Two-account smoke test

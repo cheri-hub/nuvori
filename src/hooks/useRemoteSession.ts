@@ -2,11 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import type { SessionSnapshot } from '../services/sessionRepository';
 import {
   createRemoteSession,
+  createRemoteSoloSession,
   endRemoteSession,
   joinRemoteSession,
   pauseRemoteSession,
   resumeRemoteSession,
+  saveRemoteCheckIn,
   startRemoteSession,
+  startRemoteSoloSession,
   subscribeToRemoteSession,
 } from '../services/supabaseSessionService';
 
@@ -19,8 +22,11 @@ type RemoteSessionState = {
   connect: (sessionId: string) => void;
   clear: () => void;
   create: (input: { plannedSeconds: number; inviteToken: string; inviteExpiresAt?: string }) => Promise<SessionSnapshot>;
+  createSolo: (input: { plannedSeconds: number }) => Promise<SessionSnapshot>;
   join: (input: { sessionId: string; inviteToken: string; displayName: string }) => Promise<SessionSnapshot>;
   start: () => Promise<SessionSnapshot>;
+  startSolo: (targetSessionId?: string) => Promise<SessionSnapshot>;
+  saveCheckIn: (input: { sessionId: string; userId: string; energy?: number; resistance?: number; mood?: string }) => Promise<void>;
   pause: () => Promise<SessionSnapshot>;
   resume: () => Promise<SessionSnapshot>;
   end: (input: { outcome: 'normal' | 'adapted' | 'interrupted'; idempotencyKey: string }) => Promise<SessionSnapshot>;
@@ -82,6 +88,13 @@ export function useRemoteSession(): RemoteSessionState {
     return result;
   }, [run]);
 
+  const createSolo = useCallback(async (input: { plannedSeconds: number }) => {
+    const result = await run(() => createRemoteSoloSession(input));
+    setSessionId(result.id);
+    setSnapshot(result);
+    return result;
+  }, [run]);
+
   const command = useCallback(async (operation: (id: string) => Promise<SessionSnapshot>) => {
     if (!sessionId) throw new Error('Sessao remota ainda nao foi criada.');
     const result = await run(() => operation(sessionId));
@@ -90,6 +103,15 @@ export function useRemoteSession(): RemoteSessionState {
   }, [run, sessionId]);
 
   const start = useCallback(() => command(startRemoteSession), [command]);
+  const startSolo = useCallback((targetSessionId?: string) => targetSessionId
+    ? run(() => startRemoteSoloSession(targetSessionId)).then((result) => {
+      setSnapshot(result);
+      return result;
+    })
+    : command(startRemoteSoloSession), [command, run]);
+  const saveCheckIn = useCallback(async (input: { sessionId: string; userId: string; energy?: number; resistance?: number; mood?: string }) => {
+    await run(() => saveRemoteCheckIn(input));
+  }, [run]);
   const pause = useCallback(() => command(pauseRemoteSession), [command]);
   const resume = useCallback(() => command(resumeRemoteSession), [command]);
   const end = useCallback((input: { outcome: 'normal' | 'adapted' | 'interrupted'; idempotencyKey: string }) => {
@@ -100,5 +122,5 @@ export function useRemoteSession(): RemoteSessionState {
     });
   }, [run, sessionId]);
 
-  return { sessionId, snapshot, inviteToken, pending, error, connect, clear, create, join, start, pause, resume, end };
+  return { sessionId, snapshot, inviteToken, pending, error, connect, clear, create, createSolo, join, start, startSolo, saveCheckIn, pause, resume, end };
 }

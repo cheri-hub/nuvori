@@ -88,6 +88,27 @@ export default function App() {
     }
   }
 
+  const handleStartSolo = useCallback((durationMinutes: number) => {
+    if (!remoteEnabled || !auth.user) {
+      dispatch({ type: 'START_SOLO', durationMinutes });
+      return;
+    }
+    void (async () => {
+      const session = await remote.createSolo({ plannedSeconds: durationMinutes * 60 });
+      await remote.saveCheckIn({
+        sessionId: session.id,
+        userId: auth.user!.id,
+        energy: state.energy,
+        resistance: state.resistance,
+        mood: state.mood,
+      });
+      const started = await remote.startSolo(session.id);
+      dispatch({ type: 'START_SOLO', durationMinutes });
+      dispatch({ type: 'ATTACH_REMOTE_SESSION', sessionId: session.id });
+      syncClock(dispatch, started);
+    })().catch(() => undefined);
+  }, [auth.user, remote, remoteEnabled, state.energy, state.mood, state.resistance]);
+
   function handleStartSocial() {
     if (!remoteEnabled) {
       dispatch({ type: 'START_SOCIAL' });
@@ -144,7 +165,7 @@ export default function App() {
         <PrimaryAction buttonRef={checkInTriggerRef} label={`Comecar ${state.durationMinutes} min`} onClick={() => dispatch({ type: 'OPEN_CHECKIN' })} />
         <button ref={inviteTriggerRef} className="secondary-action" type="button" onClick={handleOpenInvite}>Convidar alguem <span aria-hidden="true">&#8599;</span></button>
       </div></>}
-    {state.view === 'checkin' && <CheckInSheet state={state} dispatch={dispatch} returnFocusRef={checkInTriggerRef} />}
+    {state.view === 'checkin' && <CheckInSheet state={state} dispatch={dispatch} returnFocusRef={checkInTriggerRef} onStart={handleStartSolo} pending={remote.pending} error={remote.error} />}
     {state.view === 'invite' && <SocialInviteSheet participant={state.participant} durationMinutes={state.durationMinutes} inviteValue={inviteValue} allowLocalSimulation={!remoteEnabled} pending={remote.pending} error={remote.error} onParticipantJoin={() => dispatch({ type: 'JOIN_INVITE' })} onStart={handleStartSocial} onClose={() => dispatch({ type: 'CLOSE_OVERLAY' })} returnFocusRef={inviteTriggerRef} />}
     {state.view === 'active' && <ActiveSession state={state} dispatch={dispatch} pending={remote.pending} error={remote.error} onPause={handlePause} onResume={handleResume} onEndNormal={() => handleEnd('normal')} onEndAdapted={() => handleEnd('adapted')} onEndInterrupted={() => handleEnd('interrupted')} />}
     {state.view === 'capsule' && <CapsuleReveal outcome={state.sessionOutcome} muruStage={state.muruStage} onContinue={() => dispatch({ type: 'CAPSULE_CONTINUE' })} />}

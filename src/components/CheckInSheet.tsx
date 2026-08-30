@@ -3,7 +3,7 @@ import { CheckInControls } from './CheckInControls';
 import { useModalDialog } from '../hooks/useModalDialog';
 import type { HomeAction, HomeState } from '../state/homeReducer';
 
-export function CheckInSheet({ state, dispatch, returnFocusRef }: { state: HomeState; dispatch: Dispatch<HomeAction>; returnFocusRef: RefObject<HTMLButtonElement | null> }) {
+export function CheckInSheet({ state, dispatch, returnFocusRef, onStart, pending = false, error }: { state: HomeState; dispatch: Dispatch<HomeAction>; returnFocusRef: RefObject<HTMLButtonElement | null>; onStart?: (durationMinutes: number) => void; pending?: boolean; error?: string }) {
   const [duration, setDuration] = useState(state.durationMinutes);
   const close = () => dispatch({ type: 'CLOSE_OVERLAY' });
   const { dialogRef, onKeyDown } = useModalDialog(close, returnFocusRef);
@@ -19,7 +19,8 @@ export function CheckInSheet({ state, dispatch, returnFocusRef }: { state: HomeS
             <button key={minutes} type="button" className={duration === minutes ? 'is-selected' : ''} aria-pressed={duration === minutes} aria-label={`${minutes} minutos${minutes === 5 ? ', recomendado' : ''}`} onClick={() => setDuration(minutes)}>{minutes} min</button>
           ))}
         </div>
-        <button className="primary-action sheet-action" type="button" onClick={() => dispatch({ type: 'START_SOLO', durationMinutes: duration })}>Comecar {duration} min <span aria-hidden="true">&#8594;</span></button>
+        {error && <p className="auth-error" role="alert">{error}</p>}
+        <button className="primary-action sheet-action" type="button" disabled={pending} onClick={() => onStart ? onStart(duration) : dispatch({ type: 'START_SOLO', durationMinutes: duration })}>{pending ? 'Sincronizando...' : `Comecar ${duration} min`} <span aria-hidden="true">&#8594;</span></button>
       </section>
     </div>
   );
