@@ -64,6 +64,8 @@ h1 { margin: 0; color: var(--color-nevoa); font: 600 2rem/1.03 var(--font-displa
 .active-session .muru-scene { width: min(100%, 24rem); margin: 0 auto; }
 .session-timer { margin: .25rem 0 .75rem; color: var(--color-amber-pollen); font: 500 2.6rem/1 var(--font-mono); letter-spacing: 0; }
 .session-line, .capsule-reveal > p:not(.eyebrow), .return-message > p:not(.eyebrow) { color: rgba(241,238,228,.72); }
+.sync-status { margin: .7rem 0 0; font: .72rem/1.4 var(--font-mono); letter-spacing: .04em; color: rgba(241,238,228,.72); }
+.sync-reconnecting { color: var(--color-coral-brasa); }
 .session-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin-top: 1.5rem; }
 .session-controls .primary-action { width: auto; }
 .outline-action:disabled { cursor: not-allowed; opacity: .42; }

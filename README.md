@@ -55,6 +55,8 @@ After creating the Supabase project:
 
 Authenticated solo sessions use the `create_solo_session` and `start_solo_session` RPCs from migration `0004_solo_session_commands.sql`. The check-in is written to `session_checkins` before the server starts the timer; ending the session uses the same outcome, reward, and seven-day return rules as social sessions.
 
+The active view exposes Realtime connection state. Channel errors, timeouts, and closed subscriptions are retried with exponential backoff (up to ten seconds), and a fresh `session_snapshot` is requested whenever the channel reconnects.
+
 For passwordless email authentication, add the local and deployed app URLs to Supabase Auth's URL configuration (for example `http://localhost:5173`, your deployed HTTPS origin, and the app's HTTPS callback URL). The client never receives a service-role key.
 
 ## Two-account smoke test

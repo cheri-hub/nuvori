@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SessionSnapshot } from '../services/sessionRepository';
 import {
   createRemoteSession,
@@ -19,6 +19,7 @@ type RemoteSessionState = {
   inviteToken?: string;
   pending: boolean;
   error?: string;
+  connectionStatus: RemoteConnectionStatus;
   connect: (sessionId: string) => void;
   clear: () => void;
   create: (input: { plannedSeconds: number; inviteToken: string; inviteExpiresAt?: string }) => Promise<SessionSnapshot>;
@@ -32,6 +33,8 @@ type RemoteSessionState = {
   end: (input: { outcome: 'normal' | 'adapted' | 'interrupted'; idempotencyKey: string }) => Promise<SessionSnapshot>;
 };
 
+export type RemoteConnectionStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting';
+
 function messageFor(error: unknown): string {
   return error instanceof Error && error.message ? error.message : 'Nao foi possivel sincronizar a sessao.';
 }
@@ -42,11 +45,47 @@ export function useRemoteSession(): RemoteSessionState {
   const [inviteToken, setInviteToken] = useState<string>();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
+  const [connectionStatus, setConnectionStatus] = useState<RemoteConnectionStatus>('idle');
+  const [subscriptionVersion, setSubscriptionVersion] = useState(0);
+  const reconnectAttemptRef = useRef(0);
 
   useEffect(() => {
-    if (!sessionId) return undefined;
-    return subscribeToRemoteSession(sessionId, setSnapshot);
-  }, [sessionId]);
+    if (!sessionId) {
+      setConnectionStatus('idle');
+      return undefined;
+    }
+    setConnectionStatus('connecting');
+    let disposed = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleReconnect = () => {
+      if (disposed || retryTimer) return;
+      const attempt = reconnectAttemptRef.current;
+      reconnectAttemptRef.current += 1;
+      const delay = Math.min(1_000 * (2 ** attempt), 10_000);
+      setConnectionStatus('reconnecting');
+      retryTimer = setTimeout(() => {
+        retryTimer = undefined;
+        if (!disposed) setSubscriptionVersion((version) => version + 1);
+      }, delay);
+    };
+    const cleanup = subscribeToRemoteSession(sessionId, setSnapshot, undefined, (status) => {
+      if (status === 'SUBSCRIBED') {
+        if (retryTimer) {
+          clearTimeout(retryTimer);
+          retryTimer = undefined;
+        }
+        reconnectAttemptRef.current = 0;
+        setConnectionStatus('connected');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED' || status === 'SYNC_ERROR') {
+        scheduleReconnect();
+      }
+    });
+    return () => {
+      disposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      cleanup();
+    };
+  }, [sessionId, subscriptionVersion]);
 
   const connect = useCallback((nextSessionId: string) => {
     setSessionId(nextSessionId);
@@ -58,6 +97,7 @@ export function useRemoteSession(): RemoteSessionState {
     setSnapshot(undefined);
     setInviteToken(undefined);
     setError(undefined);
+    setConnectionStatus('idle');
   }, []);
 
   const run = useCallback(async <T,>(operation: () => Promise<T>): Promise<T> => {
@@ -122,5 +162,5 @@ export function useRemoteSession(): RemoteSessionState {
     });
   }, [run, sessionId]);
 
-  return { sessionId, snapshot, inviteToken, pending, error, connect, clear, create, createSolo, join, start, startSolo, saveCheckIn, pause, resume, end };
+  return { sessionId, snapshot, inviteToken, pending, error, connectionStatus, connect, clear, create, createSolo, join, start, startSolo, saveCheckIn, pause, resume, end };
 }

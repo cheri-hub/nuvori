@@ -89,4 +89,30 @@ describe('supabaseSessionService', () => {
     expect(client.channel).toHaveBeenCalledWith('session:session-1');
     expect(channel.unsubscribe).toHaveBeenCalledOnce();
   });
+
+  it('reports channel status and refreshes after subscribing', async () => {
+    let statusCallback: ((status: string) => void) | undefined;
+    const channel = {
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn((callback?: (status: string) => void) => {
+        statusCallback = callback;
+        return channel;
+      }),
+      unsubscribe: vi.fn().mockResolvedValue('ok'),
+    };
+    const client = {
+      channel: vi.fn().mockReturnValue(channel),
+      rpc: vi.fn().mockResolvedValue({ data: snapshotPayload(), error: null }),
+    } as unknown as RemoteSessionClient;
+    const onSnapshot = vi.fn();
+    const onStatus = vi.fn();
+
+    subscribeToRemoteSession('session-1', onSnapshot, client, onStatus);
+    statusCallback?.('SUBSCRIBED');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(onStatus).toHaveBeenCalledWith('SUBSCRIBED');
+    expect(client.rpc).toHaveBeenCalledWith('session_snapshot', { target_session_id: 'session-1' });
+    expect(onSnapshot).toHaveBeenCalledOnce();
+  });
 });

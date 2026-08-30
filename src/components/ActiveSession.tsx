@@ -13,9 +13,10 @@ type ActiveSessionProps = {
   onEndAdapted?: () => void;
   onEndInterrupted?: () => void;
   error?: string;
+  syncStatus?: 'idle' | 'connecting' | 'connected' | 'reconnecting';
 };
 
-export function ActiveSession({ state, dispatch, pending = false, onPause, onResume, onEndNormal, onEndAdapted, onEndInterrupted, error }: ActiveSessionProps) {
+export function ActiveSession({ state, dispatch, pending = false, onPause, onResume, onEndNormal, onEndAdapted, onEndInterrupted, error, syncStatus }: ActiveSessionProps) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -31,6 +32,7 @@ export function ActiveSession({ state, dispatch, pending = false, onPause, onRes
       <p className="session-timer" aria-label={`${clock.remainingSeconds} segundos restantes`}>{String(Math.floor(clock.remainingSeconds / 60)).padStart(2, '0')}:{String(clock.remainingSeconds % 60).padStart(2, '0')}</p>
       <h1>Sessao em andamento</h1>
       <p className="session-line">A linha acompanha o tempo, sem medir desempenho.</p>
+      {syncStatus && <p className={`sync-status sync-${syncStatus}`} role="status">{syncStatus === 'connected' ? 'Sincronizado' : syncStatus === 'reconnecting' ? 'Reconectando...' : 'Conectando...'}</p>}
       {error && <p className="auth-error" role="alert">{error}</p>}
       {state.isHost && <>
         <div className="session-controls" role="group" aria-label="Controles do anfitriao">

@@ -4,7 +4,7 @@ import type { RewardGrant, SessionMember, SessionSnapshot, SessionStatus } from 
 
 export type RemoteSessionChannel = {
   on: (event: 'postgres_changes', filter: Record<string, string>, callback: (payload: unknown) => void | Promise<void>) => RemoteSessionChannel;
-  subscribe: () => RemoteSessionChannel;
+  subscribe: (callback?: (status: string) => void) => RemoteSessionChannel;
   unsubscribe: () => Promise<unknown> | unknown;
 };
 
@@ -178,6 +178,7 @@ export function subscribeToRemoteSession(
   sessionId: string,
   onSnapshot: (snapshot: SessionSnapshot) => void,
   client: RemoteSessionClient | null = defaultClient,
+  onStatus?: (status: string) => void,
 ): () => void {
   if (!client) return () => undefined;
   const channel = requireClient(client).channel(`session:${sessionId}`);
@@ -185,13 +186,17 @@ export function subscribeToRemoteSession(
     try {
       onSnapshot(await fetchRemoteSession(sessionId, client));
     } catch (error) {
+      onStatus?.('SYNC_ERROR');
       if (import.meta.env.DEV) console.error(error);
     }
   };
   channel
     .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: `id=eq.${sessionId}` }, refresh)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'session_members', filter: `session_id=eq.${sessionId}` }, refresh)
-    .subscribe();
+    .subscribe((status) => {
+      onStatus?.(status);
+      if (status === 'SUBSCRIBED') void refresh();
+    });
   return () => { void channel.unsubscribe(); };
 }
 

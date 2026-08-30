@@ -167,7 +167,7 @@ export default function App() {
       </div></>}
     {state.view === 'checkin' && <CheckInSheet state={state} dispatch={dispatch} returnFocusRef={checkInTriggerRef} onStart={handleStartSolo} pending={remote.pending} error={remote.error} />}
     {state.view === 'invite' && <SocialInviteSheet participant={state.participant} durationMinutes={state.durationMinutes} inviteValue={inviteValue} allowLocalSimulation={!remoteEnabled} pending={remote.pending} error={remote.error} onParticipantJoin={() => dispatch({ type: 'JOIN_INVITE' })} onStart={handleStartSocial} onClose={() => dispatch({ type: 'CLOSE_OVERLAY' })} returnFocusRef={inviteTriggerRef} />}
-    {state.view === 'active' && <ActiveSession state={state} dispatch={dispatch} pending={remote.pending} error={remote.error} onPause={handlePause} onResume={handleResume} onEndNormal={() => handleEnd('normal')} onEndAdapted={() => handleEnd('adapted')} onEndInterrupted={() => handleEnd('interrupted')} />}
+    {state.view === 'active' && <ActiveSession state={state} dispatch={dispatch} pending={remote.pending} error={remote.error} syncStatus={remoteEnabled ? remote.connectionStatus : undefined} onPause={handlePause} onResume={handleResume} onEndNormal={() => handleEnd('normal')} onEndAdapted={() => handleEnd('adapted')} onEndInterrupted={() => handleEnd('interrupted')} />}
     {state.view === 'capsule' && <CapsuleReveal outcome={state.sessionOutcome} muruStage={state.muruStage} onContinue={() => dispatch({ type: 'CAPSULE_CONTINUE' })} />}
     {state.view === 'return' && <ReturnMessage onContinue={() => dispatch({ type: 'RETURN_CONTINUE' })} />}
   </HomeShell></AuthGate>;
