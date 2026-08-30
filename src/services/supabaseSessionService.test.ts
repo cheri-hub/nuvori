@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { RemoteSessionClient } from './supabaseSessionService';
-import { RemoteSessionError, createRemoteSession, createRemoteSoloSession, endRemoteSession, saveRemoteCheckIn, startRemoteSoloSession, subscribeToRemoteSession } from './supabaseSessionService';
+import { RemoteSessionError, createRemoteSession, createRemoteSoloSession, endRemoteSession, revokeRemoteInvite, saveRemoteCheckIn, startRemoteSoloSession, subscribeToRemoteSession } from './supabaseSessionService';
 
 function snapshotPayload() {
   return {
@@ -73,6 +73,15 @@ describe('supabaseSessionService', () => {
 
     await expect(endRemoteSession({ sessionId: 'session-1', outcome: 'interrupted', idempotencyKey: 'end-1' }, client))
       .rejects.toMatchObject({ name: RemoteSessionError.name, message: 'invite expired' });
+  });
+
+  it('revokes a pending invite through the protected RPC', async () => {
+    const client = { rpc: vi.fn().mockResolvedValue({ data: snapshotPayload(), error: null }) } as unknown as RemoteSessionClient;
+
+    const result = await revokeRemoteInvite('session-1', client);
+
+    expect(client.rpc).toHaveBeenCalledWith('revoke_social_invite', { p_session_id: 'session-1' });
+    expect(result.id).toBe('session-1');
   });
 
   it('cleans up the Realtime channel', () => {

@@ -52,3 +52,14 @@ describe('solo session command migration', () => {
     expect(sql).toContain('energy between 1 and 5');
   });
 });
+
+describe('invite lifecycle migration', () => {
+  it('defines a host-only invite revocation RPC', () => {
+    const sql = readMigration('0005_revoke_social_invite.sql');
+
+    expect(sql).toContain('function public.revoke_social_invite');
+    expect(sql).toContain("v_session.status <> 'pending'");
+    expect(sql).toContain("status = 'cancelled'");
+    expect(sql).toContain('grant execute on function public.revoke_social_invite');
+  });
+});

@@ -129,6 +129,10 @@ export async function joinRemoteSession(
   }, client));
 }
 
+export async function revokeRemoteInvite(sessionId: string, client: RemoteSessionClient | null = defaultClient): Promise<SessionSnapshot> {
+  return snapshotFrom(await callRpc('revoke_social_invite', { p_session_id: sessionId }, client));
+}
+
 export async function startRemoteSession(sessionId: string, client: RemoteSessionClient | null = defaultClient): Promise<SessionSnapshot> {
   return snapshotFrom(await callRpc('start_social_session', { p_session_id: sessionId }, client));
 }

@@ -6,6 +6,7 @@ import {
   endRemoteSession,
   joinRemoteSession,
   pauseRemoteSession,
+  revokeRemoteInvite,
   resumeRemoteSession,
   saveRemoteCheckIn,
   startRemoteSession,
@@ -25,6 +26,7 @@ type RemoteSessionState = {
   create: (input: { plannedSeconds: number; inviteToken: string; inviteExpiresAt?: string }) => Promise<SessionSnapshot>;
   createSolo: (input: { plannedSeconds: number }) => Promise<SessionSnapshot>;
   join: (input: { sessionId: string; inviteToken: string; displayName: string }) => Promise<SessionSnapshot>;
+  revoke: () => Promise<SessionSnapshot>;
   start: () => Promise<SessionSnapshot>;
   startSolo: (targetSessionId?: string) => Promise<SessionSnapshot>;
   saveCheckIn: (input: { sessionId: string; userId: string; energy?: number; resistance?: number; mood?: string }) => Promise<void>;
@@ -142,6 +144,8 @@ export function useRemoteSession(): RemoteSessionState {
     return result;
   }, [run, sessionId]);
 
+  const revoke = useCallback(() => command(revokeRemoteInvite), [command]);
+
   const start = useCallback(() => command(startRemoteSession), [command]);
   const startSolo = useCallback((targetSessionId?: string) => targetSessionId
     ? run(() => startRemoteSoloSession(targetSessionId)).then((result) => {
@@ -162,5 +166,5 @@ export function useRemoteSession(): RemoteSessionState {
     });
   }, [run, sessionId]);
 
-  return { sessionId, snapshot, inviteToken, pending, error, connectionStatus, connect, clear, create, createSolo, join, start, startSolo, saveCheckIn, pause, resume, end };
+  return { sessionId, snapshot, inviteToken, pending, error, connectionStatus, connect, clear, create, createSolo, join, revoke, start, startSolo, saveCheckIn, pause, resume, end };
 }

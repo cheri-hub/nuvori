@@ -27,6 +27,15 @@ function displayNameFor(user: { email?: string; user_metadata?: Record<string, u
   return typeof metadataName === 'string' && metadataName.trim() ? metadataName.trim() : user.email?.split('@')[0] ?? 'Nuvori';
 }
 
+function inviteErrorMessage(error?: string): string | undefined {
+  if (!error) return undefined;
+  const normalized = error.toLowerCase();
+  if (normalized.includes('expired')) return 'Este convite expirou. Peça um novo convite.';
+  if (normalized.includes('no longer accepting') || normalized.includes('already has two members')) return 'Esta sessao ja comecou ou esta cheia.';
+  if (normalized.includes('token is invalid')) return 'Este convite nao e valido.';
+  return error;
+}
+
 function syncClock(dispatch: React.Dispatch<HomeAction>, snapshot: SessionSnapshot) {
   dispatch({
     type: 'SYNC_REMOTE_SESSION',
@@ -86,6 +95,16 @@ export default function App() {
         .then((snapshot) => dispatch({ type: 'ATTACH_REMOTE_SESSION', sessionId: snapshot.id }))
         .catch(() => undefined);
     }
+  }
+
+  function handleRevokeInvite() {
+    if (!remote.sessionId) return;
+    void remote.revoke()
+      .then(() => {
+        remote.clear();
+        dispatch({ type: 'CLOSE_OVERLAY' });
+      })
+      .catch(() => undefined);
   }
 
   const handleStartSolo = useCallback((durationMinutes: number) => {
@@ -166,7 +185,7 @@ export default function App() {
         <button ref={inviteTriggerRef} className="secondary-action" type="button" onClick={handleOpenInvite}>Convidar alguem <span aria-hidden="true">&#8599;</span></button>
       </div></>}
     {state.view === 'checkin' && <CheckInSheet state={state} dispatch={dispatch} returnFocusRef={checkInTriggerRef} onStart={handleStartSolo} pending={remote.pending} error={remote.error} />}
-    {state.view === 'invite' && <SocialInviteSheet participant={state.participant} durationMinutes={state.durationMinutes} inviteValue={inviteValue} allowLocalSimulation={!remoteEnabled} pending={remote.pending} error={remote.error} onParticipantJoin={() => dispatch({ type: 'JOIN_INVITE' })} onStart={handleStartSocial} onClose={() => dispatch({ type: 'CLOSE_OVERLAY' })} returnFocusRef={inviteTriggerRef} />}
+    {state.view === 'invite' && <SocialInviteSheet participant={state.participant} durationMinutes={state.durationMinutes} inviteValue={inviteValue} allowLocalSimulation={!remoteEnabled} pending={remote.pending} error={inviteErrorMessage(remote.error)} canRevoke={remoteEnabled && state.isHost && remote.snapshot?.status === 'pending'} onRevoke={handleRevokeInvite} onParticipantJoin={() => dispatch({ type: 'JOIN_INVITE' })} onStart={handleStartSocial} onClose={() => dispatch({ type: 'CLOSE_OVERLAY' })} returnFocusRef={inviteTriggerRef} />}
     {state.view === 'active' && <ActiveSession state={state} dispatch={dispatch} pending={remote.pending} error={remote.error} syncStatus={remoteEnabled ? remote.connectionStatus : undefined} onPause={handlePause} onResume={handleResume} onEndNormal={() => handleEnd('normal')} onEndAdapted={() => handleEnd('adapted')} onEndInterrupted={() => handleEnd('interrupted')} />}
     {state.view === 'capsule' && <CapsuleReveal outcome={state.sessionOutcome} muruStage={state.muruStage} onContinue={() => dispatch({ type: 'CAPSULE_CONTINUE' })} />}
     {state.view === 'return' && <ReturnMessage onContinue={() => dispatch({ type: 'RETURN_CONTINUE' })} />}
