@@ -16,6 +16,19 @@ npm test
 npm run build
 ```
 
+## Android APK
+
+The Android shell is generated with Capacitor and lives in `android/`. To rebuild a debug APK after changing the web app:
+
+```bash
+npm run mobile:sync
+cd android
+./gradlew assembleDebug       # macOS/Linux
+.\gradlew.bat assembleDebug   # Windows PowerShell
+```
+
+The output is `android/app/build/outputs/apk/debug/app-debug.apk`. Install it on a USB-debug-enabled Android phone with `adb install -r <path-to-apk>` or copy the file to the phone and open it there. This is a debug build; signing and Play Store packaging are still pending.
+
 ## Prototype state model
 
 The Home reducer moves through `rest`, `checkin`, `invite`, `active`, `capsule`, and `return`. Check-in values, recommended duration, per-session line progress, persistent Muru stage, social participation, pause state, and the session outcome exist only in in-memory React state and reset on reload. Normal completion is gated by the timestamp-derived clock; adapted and interrupted endings remain explicit early exits. Normal and adapted sessions show a capsule, while interrupted sessions return without a reward.
