@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-function readMigration() {
-  return readFileSync(resolve(process.cwd(), 'supabase/migrations/0002_social_session_commands.sql'), 'utf8');
+function readMigration(name = '0002_social_session_commands.sql') {
+  return readFileSync(resolve(process.cwd(), `supabase/migrations/${name}`), 'utf8');
 }
 
 describe('social session command migration', () => {
@@ -32,5 +32,11 @@ describe('social session command migration', () => {
     expect(sql).toContain("'sessions'");
     expect(sql).toContain("'session_members'");
     expect(sql).toContain('supabase_realtime');
+  });
+
+  it('limits snapshots to the host or a session member', () => {
+    const sql = readMigration('0003_harden_session_snapshot.sql');
+
+    expect(sql).toContain('s.host_user_id = auth.uid() or public.is_session_member(s.id)');
   });
 });

@@ -23,6 +23,8 @@ export type SessionSnapshot = {
   members: SessionMember[];
   rewards: RewardGrant[];
   startedAt?: number;
+  pausedAt?: number;
+  accumulatedPauseSeconds?: number;
   endedAt?: number;
 };
 

@@ -9,9 +9,13 @@ type SocialInviteSheetProps = {
   onStart: () => void;
   onClose: () => void;
   returnFocusRef: RefObject<HTMLButtonElement | null>;
+  inviteValue?: string;
+  allowLocalSimulation?: boolean;
+  pending?: boolean;
+  error?: string;
 };
 
-export function SocialInviteSheet({ participant, durationMinutes, onParticipantJoin, onStart, onClose, returnFocusRef }: SocialInviteSheetProps) {
+export function SocialInviteSheet({ participant, durationMinutes, onParticipantJoin, onStart, onClose, returnFocusRef, inviteValue = `NUVORI-${durationMinutes}MIN`, allowLocalSimulation = true, pending = false, error }: SocialInviteSheetProps) {
   const { dialogRef, onKeyDown } = useModalDialog(onClose, returnFocusRef);
   return (
     <div className="sheet-backdrop">
@@ -20,16 +24,17 @@ export function SocialInviteSheet({ participant, durationMinutes, onParticipantJ
         <p className="eyebrow">JORNADA A DOIS</p>
         <h2 id="invite-title">Convidar alguem</h2>
         <p className="sheet-copy">Compartilhe este convite com alguem de confianca.</p>
-        <div className="invite-code" aria-label="Codigo do convite">NUVORI-{durationMinutes}MIN</div>
-        <div className="sheet-actions"><button type="button" className="outline-action" onClick={() => navigator.clipboard?.writeText(`NUVORI-${durationMinutes}MIN`)}>Copiar convite</button><button type="button" className="outline-action" onClick={() => navigator.share?.({ title: 'Convite Nuvori', text: `NUVORI-${durationMinutes}MIN` })}>Compartilhar</button></div>
+        <div className="invite-code" aria-label="Codigo do convite">{inviteValue}</div>
+        <div className="sheet-actions"><button type="button" className="outline-action" disabled={pending} onClick={() => navigator.clipboard?.writeText(inviteValue)}>Copiar convite</button><button type="button" className="outline-action" disabled={pending} onClick={() => navigator.share?.({ title: 'Convite Nuvori', text: inviteValue })}>Compartilhar</button></div>
         {participant ? (
           <div className="participant-presence" aria-label="Participante autenticada">
             <span className="participant-avatar" aria-label={`Avatar publico de ${participant.displayName}`}>{participant.avatarInitials}</span>
             <span><strong>{participant.displayName}</strong><small>Perfil autenticado - pronta para comecar</small></span>
           </div>
-        ) : <p className="waiting-state">Aguardando a outra pessoa entrar...</p>}
-        <button className="primary-action sheet-action" type="button" onClick={participant ? onStart : onParticipantJoin}>
-          {participant ? `Comecar sessao com ${participant.displayName.split(' ')[0]}` : 'Simular entrada de participante'} <span aria-hidden="true">&#8594;</span>
+        ) : <p className="waiting-state">{allowLocalSimulation ? 'Aguardando a outra pessoa entrar...' : 'Convite ativo. Aguardando a outra pessoa entrar...'}</p>}
+        {error && <p className="auth-error" role="alert">{error}</p>}
+        <button className="primary-action sheet-action" type="button" disabled={pending || (!participant && !allowLocalSimulation)} onClick={participant ? onStart : onParticipantJoin}>
+          {pending ? 'Sincronizando...' : participant ? `Comecar sessao com ${participant.displayName.split(' ')[0]}` : 'Simular entrada de participante'} <span aria-hidden="true">&#8594;</span>
         </button>
       </section>
     </div>

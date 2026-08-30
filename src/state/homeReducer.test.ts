@@ -120,4 +120,27 @@ describe('homeReducer', () => {
 
     expect(homeReducer(participant, action)).toBe(participant);
   });
+
+  it('applies an authoritative remote clock snapshot without changing the view', () => {
+    const active = { ...initialHomeState, view: 'active' as const, startedAt: 1_000, durationMinutes: 5 };
+    const synced = homeReducer(active, {
+      type: 'SYNC_REMOTE_SESSION',
+      startedAt: 2_000,
+      pausedAt: 4_000,
+      pausedSeconds: 1.5,
+    });
+
+    expect(synced.view).toBe('active');
+    expect(synced.startedAt).toBe(2_000);
+    expect(synced.pausedAt).toBe(4_000);
+    expect(synced.pausedSeconds).toBe(1.5);
+  });
+
+  it('applies an authoritative remote ending', () => {
+    const active = { ...initialHomeState, view: 'active' as const, isHost: true };
+    const next = homeReducer(active, { type: 'APPLY_REMOTE_END', outcome: 'interrupted' });
+
+    expect(next.view).toBe('return');
+    expect(next.sessionOutcome).toBe('interrupted');
+  });
 });

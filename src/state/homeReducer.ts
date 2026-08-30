@@ -22,6 +22,7 @@ export type HomeState = {
   startedAt?: number;
   pausedAt?: number;
   pausedSeconds: number;
+  remoteSessionId?: string;
 };
 
 export type HomeAction =
@@ -33,6 +34,9 @@ export type HomeAction =
   | { type: 'OPEN_INVITE' }
   | { type: 'JOIN_INVITE' }
   | { type: 'START_SOCIAL' }
+  | { type: 'ATTACH_REMOTE_SESSION'; sessionId: string }
+  | { type: 'SYNC_REMOTE_SESSION'; startedAt?: number; pausedAt?: number; pausedSeconds: number }
+  | { type: 'APPLY_REMOTE_END'; outcome: 'normal' | 'adapted' | 'interrupted' }
   | { type: 'CLOSE_OVERLAY' }
   | { type: 'PAUSE_SESSION'; pausedAt: number }
   | { type: 'RESUME_SESSION'; resumedAt: number }
@@ -55,6 +59,7 @@ export const initialHomeState: HomeState = {
   lineProgress: 0,
   sessionOutcome: undefined,
   pausedSeconds: 0,
+  remoteSessionId: undefined,
 };
 
 const durations = new Set([5, 10, 15, 20]);
@@ -75,7 +80,7 @@ export function homeReducer(state: HomeState, action: HomeAction): HomeState {
       return state.view === 'checkin' ? { ...state, mood: action.mood || undefined } : state;
     case 'START_SOLO':
       return state.view === 'checkin' && durations.has(action.durationMinutes)
-        ? { ...state, view: 'active', durationMinutes: action.durationMinutes, isSocial: false, isHost: true, participant: undefined, lineProgress: 0, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined }
+        ? { ...state, view: 'active', durationMinutes: action.durationMinutes, isSocial: false, isHost: true, participant: undefined, lineProgress: 0, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, remoteSessionId: undefined, sessionOutcome: undefined }
         : state;
     case 'OPEN_INVITE':
       return state.view === 'rest' ? { ...state, view: 'invite', isHost: true, participant: undefined } : state;
@@ -87,6 +92,17 @@ export function homeReducer(state: HomeState, action: HomeAction): HomeState {
       return state.view === 'invite' && state.isHost && state.participant
         ? { ...state, view: 'active', isSocial: true, lineProgress: 0, startedAt: Date.now(), pausedAt: undefined, pausedSeconds: 0, sessionOutcome: undefined }
         : state;
+    case 'ATTACH_REMOTE_SESSION':
+      return { ...state, remoteSessionId: action.sessionId };
+    case 'SYNC_REMOTE_SESSION':
+      return state.view === 'active'
+        ? { ...state, startedAt: action.startedAt ?? state.startedAt, pausedAt: action.pausedAt, pausedSeconds: action.pausedSeconds }
+        : state;
+    case 'APPLY_REMOTE_END':
+      if (state.view !== 'active' || !state.isHost) return state;
+      return action.outcome === 'interrupted'
+        ? { ...state, view: 'return', sessionOutcome: action.outcome }
+        : { ...state, view: 'capsule', sessionOutcome: action.outcome, lineProgress: 1 };
     case 'CLOSE_OVERLAY':
       return state.view === 'checkin' || state.view === 'invite' ? { ...state, view: 'rest' } : state;
     case 'PAUSE_SESSION':
@@ -115,11 +131,11 @@ export function homeReducer(state: HomeState, action: HomeAction): HomeState {
       return state.view === 'active' && state.isHost ? { ...state, view: 'return', sessionOutcome: 'interrupted' } : state;
     case 'RETURN_CONTINUE':
       return state.view === 'return'
-        ? { ...state, view: 'rest', isSocial: false, participant: undefined, lineProgress: 0, sessionOutcome: undefined, startedAt: undefined, pausedAt: undefined, pausedSeconds: 0 }
+        ? { ...state, view: 'rest', isSocial: false, participant: undefined, lineProgress: 0, sessionOutcome: undefined, startedAt: undefined, pausedAt: undefined, pausedSeconds: 0, remoteSessionId: undefined }
         : state;
     case 'CAPSULE_CONTINUE':
       return state.view === 'capsule' && (state.sessionOutcome === 'normal' || state.sessionOutcome === 'adapted')
-        ? { ...state, view: 'rest', isSocial: false, participant: undefined, lineProgress: 0, sessionOutcome: undefined, startedAt: undefined, pausedAt: undefined, pausedSeconds: 0 }
+        ? { ...state, view: 'rest', isSocial: false, participant: undefined, lineProgress: 0, sessionOutcome: undefined, startedAt: undefined, pausedAt: undefined, pausedSeconds: 0, remoteSessionId: undefined }
         : state;
     default:
       return state;
